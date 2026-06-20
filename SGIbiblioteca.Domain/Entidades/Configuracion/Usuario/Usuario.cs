@@ -1,7 +1,7 @@
 ﻿using System;
 using SGIbiblioteca.Domain.Base;
 
-namespace SGIbiblioteca.Domain.Entidades.Configuracion.NewFolder5
+namespace SGIbiblioteca.Domain.Entidades.Configuracion.Usuarios
 {
     public class Usuario : AuditEntity
     {

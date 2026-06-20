@@ -1,7 +1,7 @@
 ﻿using System;
 using SGIbiblioteca.Domain.Base;
 
-namespace SGIbiblioteca.Domain.Entidades.Configuracion.NewFolder2
+namespace SGIbiblioteca.Domain.Entidades.Configuracion.Notificaciones
 {
     public class Notificacion : AuditEntity
     {

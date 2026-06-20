@@ -1,7 +1,7 @@
 ﻿using System;
 using SGIbiblioteca.Domain.Base;
 
-namespace SGIbiblioteca.Domain.Entities.Auditoria
+namespace SGIbiblioteca.Domain.Entities.Auditorias
 {
     public class Auditoria : AuditEntity
     {

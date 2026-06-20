@@ -14,3 +14,4 @@ namespace SGIbiblioteca.Domain.Entidades.Configuracion.Libros
         public int CantidadDisponible { get; set; }
         public string Estado { get; set; }
     }
+}

@@ -1,7 +1,7 @@
 ﻿using System;
 using SGIbiblioteca.Domain.Base;
 
-namespace SGIbiblioteca.Domain.Entidades.Configuracion.NewFolder4
+namespace SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos
 {
     public class Prestamo : AuditEntity
     {

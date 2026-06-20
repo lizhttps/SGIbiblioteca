@@ -5,12 +5,12 @@ namespace SGIbiblioteca.Domain.Repositorio
 {
     public interface IBaseRepository<TEntity> where TEntity : class
     {
-        Task<TEntity> GetEntityByIdAsync(int id);
-        Task UpdateEntityAsync(TEntity entity);
-        Task DeleteEntityAsync(TEntity entity);
-        Task SaveEntityAsync(TEntity entity);
+        Task<OperationResult> SaveEntityAsync(TEntity entity);
+        Task<OperationResult> UpdateEntityAsync(TEntity entity);
+        Task<OperationResult> DeleteEntityAsync(TEntity entity);
+        Task<OperationResult> GetAllAsync(Expression<Func<TEntity, bool>> filter);
         Task<List<TEntity>> GetAllAsync();
-        Task<OperactionResult> GetAllAsync(Expression<Func<TEntity, bool>> filter);
+        Task<TEntity> GetEntityByIdAsync(int id);
         Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filter);
     }
 }
