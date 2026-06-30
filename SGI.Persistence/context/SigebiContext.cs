@@ -13,7 +13,7 @@ namespace SGI.Persistence.context
         public SigebiContext(DbContextOptions<SigebiContext> options) : base(options)
         {
         }
-
+        
         public DbSet<Libro> Libros { get; set; }
         public DbSet<Usuario> Usuarios { get; set; }
         public DbSet<Prestamo> Prestamos { get; set; }

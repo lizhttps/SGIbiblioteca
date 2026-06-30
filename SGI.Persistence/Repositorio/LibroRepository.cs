@@ -15,6 +15,7 @@ namespace SGI.Persistence.Repositorios
             _context = context;
         }
 
+        // Implementación del método para obtener un libro por su ISBN.
         public async Task<Libro> GetByISBNAsync(string isbn)
         {
             return await _context.Libros.FirstOrDefaultAsync(l => l.ISBN == isbn);

@@ -15,6 +15,7 @@ namespace SGI.Persistence.Repositorios
             _context = context;
         }
 
+        // Implementación del método para obtener un usuario por su correo electrónico.
         public async Task<Usuario> GetByCorreoAsync(string correo)
         {
             return await _context.Usuarios.FirstOrDefaultAsync(u => u.Correo == correo);

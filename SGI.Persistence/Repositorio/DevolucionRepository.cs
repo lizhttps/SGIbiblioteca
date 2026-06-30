@@ -15,6 +15,7 @@ namespace SGI.Persistence.Repositorios
             _context = context;
         }
 
+        // Implementación del método para obtener una devolución por el ID del préstamo.
         public async Task<Devolucion> GetByPrestamoIdAsync(int prestamoId)
         {
             return await _context.Devoluciones.FirstOrDefaultAsync(d => d.PrestamoId == prestamoId);

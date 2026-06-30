@@ -6,6 +6,8 @@ using SGI.Persistence.Base;
 
 namespace SGI.Persistence.Repositorios
 {
+
+    // Implementación del repositorio de auditoría. obtiene los datos de auditoría de la base de datos.
     public class AuditoriaRepository : BaseRepository<Auditoria>, IAuditoriaRepository
     {
         private readonly SigebiContext _context;
