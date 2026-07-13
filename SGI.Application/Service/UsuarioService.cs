@@ -1,12 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Usario;
+﻿using SGI.Application.Dtos.Usario;
 using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
-using SGIbiblioteca.Domain.Entidades.Configuracion.Libros;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Usuarios;
 using SGIbiblioteca.Domain.Repositorio;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 
 namespace SGI.Application.Service
@@ -15,14 +11,12 @@ namespace SGI.Application.Service
     {
 
         private readonly IUsuarioRepository _UsuarioRepository;
-        private readonly ILogger<UsuarioService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly ILoggerService _logger;
 
-        public UsuarioService(IUsuarioRepository UsuarioRepository, ILogger<UsuarioService> logger, IConfiguration configuration)
+        public UsuarioService(IUsuarioRepository UsuarioRepository, ILoggerService logger)
         {
             _UsuarioRepository = UsuarioRepository;
             _logger = logger;
-            _configuration = configuration;
         }
         public async Task<OperationResult> GetCorreo(string correo)
         {
@@ -57,7 +51,7 @@ namespace SGI.Application.Service
 
                 result.Success = false;
                 result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;
@@ -93,10 +87,16 @@ namespace SGI.Application.Service
         public async Task<OperationResult> GetDataById(int id)
         {
             OperationResult result = new OperationResult();
-
             try
             {
                 var usuarioid = await _UsuarioRepository.GetEntityByIdAsync(id);
+
+                if (usuarioid == null)
+                {
+                    result.Success = false;
+                    result.Message = "Registro no encontrado.";
+                    return result;
+                }
 
                 var usuarioresult = new UsuarioUpdateDto()
                 {
@@ -107,21 +107,15 @@ namespace SGI.Application.Service
                     Telefono = usuarioid.Telefono,
                     FechaMod = usuarioid.FechaCreacion,
                     UsuarioMod = int.TryParse(usuarioid.CreadoPor, out int user) ? user : 0
-
-                    // Trazabilidad: Se asigna la fecha y se realiza un parseo seguro 
-                    //del identificador del creador para evitar excepciones si el campo es nulo o no numérico
                 };
-
                 result.Data = usuarioresult;
             }
             catch (Exception ex)
             {
-
                 result.Success = false;
                 result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
-
             return result;
         }
 
@@ -182,7 +176,7 @@ namespace SGI.Application.Service
 
                 result.Success = false;
                 result.Message = "Error guardando el Usuario";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
             return result;
         }
@@ -195,6 +189,14 @@ namespace SGI.Application.Service
             try
             {
                 var UsuarioToUpdate = await _UsuarioRepository.GetEntityByIdAsync(dto.Id);
+
+                if (UsuarioToUpdate == null)
+                {
+                    result.Success = false;
+                    result.Message = "Usuario no encontrado.";
+                    return result;
+                }
+
                 UsuarioToUpdate.Nombre = dto.Nombre;
                 UsuarioToUpdate.Apellido = dto.Apellido;
                 UsuarioToUpdate.Correo = dto.Correo;
@@ -202,14 +204,13 @@ namespace SGI.Application.Service
                 UsuarioToUpdate.FechaModificacion = dto.FechaMod;
                 UsuarioToUpdate.ModificadoPor = dto.UsuarioMod.ToString();
 
-
                 await _UsuarioRepository.UpdateEntityAsync(UsuarioToUpdate);
             }
             catch (Exception ex)
             {
                 result.Success = false;
                 result.Message = "Error actualizando el Usuario";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;

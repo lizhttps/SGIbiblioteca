@@ -6,8 +6,7 @@ namespace SGI.Application.Interfaces
 {
     public interface IPrestamoService : IBaseService<PrestamoSaveDto, PrestamoUpdateDto, PrestamoRemoveDto>
     {
-        Task<OperationResult> GetPrestamosByPrestamoId(int usuarioid);
-
         Task<OperationResult> GetVencidosByUsuarioId(int usuarioId);
+        Task<OperationResult> GetPrestamosByUsuarioId(int usuarioId);
     }
 }

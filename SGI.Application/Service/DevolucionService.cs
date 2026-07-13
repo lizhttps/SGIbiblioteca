@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Devolucion;
+﻿using SGI.Application.Dtos.Devolucion;
 using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Devoluciones;
@@ -12,22 +10,16 @@ namespace SGI.Application.Service
     {
         private readonly IDevolucionRepository _devolucionRepository;
         private readonly IPrestamoRepository _prestamoRepository;
-        private readonly ILibroRepository _libroRepository;
-        private readonly ILogger<DevolucionService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly ILoggerService _logger;
 
         public DevolucionService(
             IDevolucionRepository devolucionRepository,
             IPrestamoRepository prestamoRepository,
-            ILibroRepository libroRepository,
-            ILogger<DevolucionService> logger,
-            IConfiguration configuration)
+            ILoggerService logger)
         {
             _devolucionRepository = devolucionRepository;
             _prestamoRepository = prestamoRepository;
-            _libroRepository = libroRepository;
             _logger = logger;
-            _configuration = configuration;
         }
 
         public async Task<OperationResult> GetData()
@@ -96,10 +88,13 @@ namespace SGI.Application.Service
                 result = await _devolucionRepository.SaveEntityAsync(new Devolucion()
                 {
                     PrestamoId = dto.PrestamoId,
-                    Estado = true,
+                    FechaDevolucion = dto.FechaDevolucion,
+                    DevueltoATiempo = dto.DevueltoATiempo,
                     Observaciones = dto.Observaciones,
-                    FechaCreacion = dto.FechaMod,
+                    Estado = true,
+                    FechaCreacion = DateTime.Now,
                     CreadoPor = dto.UsuarioMod.ToString(),
+                    ModificadoPor = dto.UsuarioMod.ToString()
                 });
             }
             catch (Exception ex)
@@ -110,6 +105,7 @@ namespace SGI.Application.Service
             }
             return result;
         }
+
 
         public async Task<OperationResult> Update(DevolucionUpdateDto dto)
         {
@@ -185,7 +181,7 @@ namespace SGI.Application.Service
                     DevueltoATiempo = devolucion.DevueltoATiempo,
                     Observaciones = devolucion.Observaciones,
                     FechaMod = devolucion.FechaCreacion,
-                    UsuarioMod = int.TryParse(devolucion.CreadoPor, out int user) ? user : 0 
+                    UsuarioMod = int.TryParse(devolucion.CreadoPor, out int user) ? user : 0
                 };
             }
             catch (Exception ex)
@@ -232,4 +228,3 @@ namespace SGI.Application.Service
 
     }
 }
-

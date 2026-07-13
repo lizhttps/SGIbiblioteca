@@ -1,5 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Auditoria;
+﻿using SGI.Application.Dtos.Auditoria;
 using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entities.Auditorias;
@@ -7,15 +6,15 @@ using SGIbiblioteca.Domain.Repositorio;
 
 namespace SGI.Application.Service
 {
-        public class AuditoriaService : IAuditoriaService
+    public class AuditoriaService : IAuditoriaService
+    {
+        private readonly IAuditoriaRepository _auditoriaRepository;
+        private readonly ILoggerService _logger;
+        public AuditoriaService(IAuditoriaRepository auditoriaRepository, ILoggerService logger)
         {
-            private readonly IAuditoriaRepository _auditoriaRepository;
-            private readonly ILogger<AuditoriaService> _logger;
-            public AuditoriaService(IAuditoriaRepository auditoriaRepository, ILogger<AuditoriaService> logger)
-            {
-                _auditoriaRepository = auditoriaRepository;
-                _logger = logger;
-            }
+            _auditoriaRepository = auditoriaRepository;
+            _logger = logger;
+        }
         public async Task<OperationResult> Save(AuditoriaSaveDto dto)
         {
             OperationResult result = new OperationResult();
@@ -26,9 +25,15 @@ namespace SGI.Application.Service
                     Entidad = dto.Entidad,
                     Accion = dto.Accion,
                     Detalle = dto.Detalle,
+                    EntidadId = dto.EntidadId,
+                    RealizadoPor = dto.RealizadoPor,
+                    FechaAccion = DateTime.Now,
                     FechaCreacion = DateTime.Now,
-                });  
-            }    
+                    CreadoPor = dto.RealizadoPor,
+                    ModificadoPor = dto.RealizadoPor,
+                    Estado = true
+                });
+            }
             catch (Exception ex)
             {
                 result.Success = false;
@@ -37,6 +42,7 @@ namespace SGI.Application.Service
             }
             return result;
         }
+
 
 
         public async Task<OperationResult> GetData()
@@ -52,8 +58,8 @@ namespace SGI.Application.Service
                         Detalle = auditoria.Detalle,
                         EntidadId = auditoria.EntidadId,
                         RealizadoPor = auditoria.RealizadoPor,
-                    }).ToList();  
-            } 
+                    }).ToList();
+            }
             catch (Exception ex)
             {
                 result.Success = false;
@@ -65,8 +71,8 @@ namespace SGI.Application.Service
 
 
         public async Task<OperationResult> GetDataById(int id)
-            {
-                OperationResult result = new OperationResult();
+        {
+            OperationResult result = new OperationResult();
             try
             {
                 var audiid = await _auditoriaRepository.GetEntityByIdAsync(id);
@@ -96,17 +102,32 @@ namespace SGI.Application.Service
                 result.Message = "Error al obtener el registro de auditoría.";
                 _logger.LogError(ex, result.Message);
             }
-                return result;
-            }
+            return result;
+        }
 
-            
-            public async Task<OperationResult> GetByEntidad(string entidad)
+
+        public async Task<OperationResult> GetByEntidad(string entidad)
+        {
+            OperationResult result = new OperationResult();
+            try
             {
-                OperationResult result = new OperationResult();
-                try
+                if (string.IsNullOrWhiteSpace(entidad))
                 {
-                result.Data = (await _auditoriaRepository.GetByEntidadAsync(entidad))
-                .Select(auditoria => new AuditoriaSaveDto()
+                    result.Success = false;
+                    result.Message = "El campo 'entidad' es requerido.";
+                    return result;
+                }
+
+                var auditorias = await _auditoriaRepository.GetByEntidadAsync(entidad);
+
+                if (auditorias == null || !auditorias.Any())
+                {
+                    result.Success = false;
+                    result.Message = "No se encontraron auditorías para la entidad especificada.";
+                    return result;
+                }
+
+                result.Data = auditorias.Select(auditoria => new AuditoriaSaveDto()
                 {
                     Entidad = auditoria.Entidad,
                     Accion = auditoria.Accion,
@@ -114,14 +135,14 @@ namespace SGI.Application.Service
                     EntidadId = auditoria.EntidadId,
                     RealizadoPor = auditoria.RealizadoPor,
                 }).ToList();
-                }
-                catch (Exception ex)
-                {
-                    result.Success = false;
-                    result.Message = "Error al obtener la auditoría por entidad.";
-                    _logger.LogError(ex, result.Message);
-                }
-                return result;
             }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error al obtener la auditoría por entidad.";
+                _logger.LogError(ex, result.Message);
+            }
+            return result;
         }
     }
+}

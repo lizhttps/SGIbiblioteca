@@ -1,7 +1,4 @@
-﻿
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Libros;
+﻿using SGI.Application.Dtos.Libros;
 using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Repositorio;
@@ -14,14 +11,12 @@ namespace SGI.Application.Service
     {
 
         private readonly ILibroRepository _libroRepository;
-        private readonly ILogger<LibroService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly ILoggerService _logger;
 
-        public LibroService(ILibroRepository LibroRepository, ILogger<LibroService> logger, IConfiguration configuration)
+        public LibroService(ILibroRepository LibroRepository, ILoggerService logger)
         {
             _libroRepository = LibroRepository;
             _logger = logger;
-            _configuration = configuration;
         }
         public async Task<OperationResult> GetByISBN(string isbn)
         {
@@ -52,7 +47,7 @@ namespace SGI.Application.Service
 
                 result.Success = false;
                 result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;
@@ -96,6 +91,13 @@ namespace SGI.Application.Service
             {
                 var libroid = await _libroRepository.GetEntityByIdAsync(id);
 
+                if (libroid == null)
+                {
+                    result.Success = false;
+                    result.Message = "Registro no encontrado.";
+                    return result;
+                }
+
                 var libroresult = new LibroUpdateDto()
                 {
                     Id = libroid.Id,
@@ -114,14 +116,14 @@ namespace SGI.Application.Service
             }
             catch (Exception ex)
             {
-
                 result.Success = false;
                 result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;
         }
+
 
         public async Task<OperationResult> Remove(LibroRemoveDto dto)
         {
@@ -138,9 +140,9 @@ namespace SGI.Application.Service
                     return result;
                 }
                 AuditEntity baseLibro = libroToDelete;
-                baseLibro.Estado = dto.Estado; 
+                baseLibro.Estado = dto.Estado;
 
-               
+
                 await _libroRepository.UpdateEntityAsync(libroToDelete);
             }
             catch (Exception ex)
@@ -152,7 +154,7 @@ namespace SGI.Application.Service
 
             return result;
         }
-        
+
 
         public async Task<OperationResult> Save(LibroSaveDto dto)
         {
@@ -179,7 +181,7 @@ namespace SGI.Application.Service
 
                 result.Success = false;
                 result.Message = "Error guardando el Libro";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
             return result;
         }
@@ -192,6 +194,14 @@ namespace SGI.Application.Service
             try
             {
                 var libroToUpdate = await _libroRepository.GetEntityByIdAsync(dto.Id);
+
+                if (libroToUpdate == null)
+                {
+                    result.Success = false;
+                    result.Message = "Libro no encontrado.";
+                    return result;
+                }
+
                 libroToUpdate.Titulo = dto.Titulo;
                 libroToUpdate.Autor = dto.Autor;
                 libroToUpdate.ISBN = dto.ISBN;
@@ -202,14 +212,13 @@ namespace SGI.Application.Service
                 libroToUpdate.FechaModificacion = dto.FechaMod;
                 libroToUpdate.ModificadoPor = dto.UsuarioMod.ToString();
 
-
                 await _libroRepository.UpdateEntityAsync(libroToUpdate);
             }
             catch (Exception ex)
             {
                 result.Success = false;
                 result.Message = "Error actualizando el Libro";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;

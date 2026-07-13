@@ -1,26 +1,21 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Notificacion;
+﻿using SGI.Application.Dtos.Notificacion;
+using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Notificaciones;
 using SGIbiblioteca.Domain.Repositorio;
 
-
 namespace SGI.Application.Service
 {
-    public class NotificacionService
+    public class NotificacionService : INotificacionService
     {
         private readonly INotificacionRepository _NotificacionRepository;
-        private readonly ILogger<NotificacionService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly ILoggerService _logger;
 
-        public NotificacionService(INotificacionRepository NotificacionRepository, ILogger<NotificacionService> logger, IConfiguration configuration)
+        public NotificacionService(INotificacionRepository NotificacionRepository, ILoggerService logger)
         {
             _NotificacionRepository = NotificacionRepository;
             _logger = logger;
-            _configuration = configuration;
         }
-       
 
         public async Task<OperationResult> GetData()
         {
@@ -55,10 +50,10 @@ namespace SGI.Application.Service
             {
                 var notiID = await _NotificacionRepository.GetEntityByIdAsync(id);
 
-                if (notiID == null) // si el Notificacion no existe, devolvemos un error.
+                if (notiID == null)
                 {
                     result.Success = false;
-                    result.Message = "Notificacion no encontrada.";
+                    result.Message = "Notificación no encontrada.";
                     return result;
                 }
 
@@ -72,18 +67,17 @@ namespace SGI.Application.Service
                     UsuarioMod = int.TryParse(notiID.CreadoPor, out int user) ? user : 0
                 };
                 result.Data = notiresult;
-
             }
             catch (Exception ex)
             {
-
                 result.Success = false;
-                result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                result.Message = "Error obteniendo la notificación.";
+                _logger.LogError(ex, result.Message);
             }
 
             return result;
         }
+
 
         public async Task<OperationResult> GetNotiUsuario(int usuarioid)
         {
@@ -107,7 +101,7 @@ namespace SGI.Application.Service
             {
                 result.Success = false;
                 result.Message = "Error obteniendo";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
             return result;
         }
@@ -143,7 +137,6 @@ namespace SGI.Application.Service
             return result;
         }
 
-
         public async Task<OperationResult> Save(NotificacionSaveDto dto)
         {
             OperationResult result = new OperationResult();
@@ -166,11 +159,10 @@ namespace SGI.Application.Service
 
                 result.Success = false;
                 result.Message = "Error guardando la Notificacion";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
             return result;
         }
-
 
         public async Task<OperationResult> Update(NotificacionUpdateDto dto)
         {
@@ -192,11 +184,10 @@ namespace SGI.Application.Service
             {
                 result.Success = false;
                 result.Message = "Error actualizando la Notificacion";
-                _logger.LogError(result.Message, ex);
+                _logger.LogError(ex, result.Message);
             }
 
             return result;
         }
     }
 }
-    

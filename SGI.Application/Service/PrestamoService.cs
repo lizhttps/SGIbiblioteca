@@ -1,8 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using SGI.Application.Dtos.Prestamo;
+﻿using SGI.Application.Dtos.Prestamo;
 using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
+using SGIbiblioteca.Domain.Entidades.Configuracion.Libros;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos;
 using SGIbiblioteca.Domain.Repositorio;
 
@@ -14,23 +13,20 @@ namespace SGI.Application.Service
         private readonly ILibroRepository _libroRepository;
         private readonly IUsuarioRepository _usuarioRepository;
         private readonly IPenalizacionRepository _penalizacionRepository;
-        private readonly ILogger<PrestamoService> _logger;
-        private readonly IConfiguration _configuration;
+        private readonly ILoggerService _logger;
 
         public PrestamoService(
             IPrestamoRepository prestamoRepository,
             ILibroRepository libroRepository,
             IUsuarioRepository usuarioRepository,
             IPenalizacionRepository penalizacionRepository,
-            ILogger<PrestamoService> logger,
-            IConfiguration configuration)
+            ILoggerService logger)
         {
             _prestamoRepository = prestamoRepository;
             _libroRepository = libroRepository;
             _usuarioRepository = usuarioRepository;
             _penalizacionRepository = penalizacionRepository;
             _logger = logger;
-            _configuration = configuration;
         }
 
         public async Task<OperationResult> GetData()
@@ -92,9 +88,12 @@ namespace SGI.Application.Service
         public async Task<OperationResult> Save(PrestamoSaveDto dto)
         {
             OperationResult result = new OperationResult();
+            Libro? libro = null;
+            bool libroDescontado = false;
+
             try
             {
-                // validaciones 
+                // validaciones
                 var usuario = await _usuarioRepository.GetEntityByIdAsync(dto.UsuarioId);
                 if (usuario == null || usuario.Estado == false)
                 {
@@ -111,7 +110,7 @@ namespace SGI.Application.Service
                     return result;
                 }
 
-                var libro = await _libroRepository.GetEntityByIdAsync(dto.LibroId);
+                libro = await _libroRepository.GetEntityByIdAsync(dto.LibroId);
                 if (libro == null)
                 {
                     result.Success = false;
@@ -126,8 +125,10 @@ namespace SGI.Application.Service
                     return result;
                 }
 
+                // Descontamos la disponibilidad del libro
                 libro.CantidadDisponible = libro.CantidadDisponible - 1;
                 await _libroRepository.UpdateEntityAsync(libro);
+                libroDescontado = true;
 
                 result = await _prestamoRepository.SaveEntityAsync(new Prestamo()
                 {
@@ -138,9 +139,24 @@ namespace SGI.Application.Service
                     CreadoPor = dto.UsuarioMod.ToString(),
                     Estado = true
                 });
+
+                // Si el préstamo no se pudo registrar, revertimos el descuento del libro
+                // para no dejar una copia "fantasma" descontada sin préstamo asociado
+                if (!result.Success && libroDescontado)
+                {
+                    libro.CantidadDisponible += 1;
+                    await _libroRepository.UpdateEntityAsync(libro);
+                }
             }
             catch (Exception ex)
             {
+                // Si la excepción ocurrió después de descontar el libro, también revertimos aquí
+                if (libroDescontado && libro != null)
+                {
+                    libro.CantidadDisponible += 1;
+                    await _libroRepository.UpdateEntityAsync(libro);
+                }
+
                 result.Success = false;
                 result.Message = "Error al registrar el prestamo.";
                 _logger.LogError(ex, result.Message);
@@ -167,7 +183,7 @@ namespace SGI.Application.Service
                 prestamo.FechaLimite = dto.FechaLimite;
                 prestamo.FechaModificacion = dto.FechaMod;
                 prestamo.ModificadoPor = dto.UsuarioMod.ToString();
-                
+
 
                 await _prestamoRepository.UpdateEntityAsync(prestamo);
             }
@@ -225,36 +241,6 @@ namespace SGI.Application.Service
             {
                 result.Success = false;
                 result.Message = "Error al obtener los prestamos vencidos del usuario.";
-                _logger.LogError(ex, result.Message);
-            }
-            return result;
-        }
-        public async Task<OperationResult> GetPrestamosByPrestamoId(int prestamoId)
-        {
-            OperationResult result = new OperationResult();
-            try
-            {
-                var prestamo = await _prestamoRepository.GetEntityByIdAsync(prestamoId);
-                if (prestamo == null)
-                {
-                    result.Success = false;
-                    result.Message = "Prestamo no encontrado.";
-                    return result;
-                }
-                result.Data = new PrestamoUpdateDto()
-                {
-                    Id = prestamoId,
-                    UsuarioId = prestamo.UsuarioId,
-                    LibroId = prestamo.LibroId,
-                    FechaLimite = prestamo.FechaLimite,
-                    FechaMod = prestamo.FechaCreacion,
-                    UsuarioMod = int.TryParse(prestamo.CreadoPor, out int user) ? user : 0
-                };
-            }
-            catch (Exception ex)
-            {
-                result.Success = false;
-                result.Message = "Error al obtener el prestamo.";
                 _logger.LogError(ex, result.Message);
             }
             return result;

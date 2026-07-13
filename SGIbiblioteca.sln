@@ -42,11 +42,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGI.APII", "SGI.APII\SGI.AP
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SGI.Model", "SGI.Model\SGI.Model.csproj", "{64577204-C946-400D-B2A7-8230FD24DD69}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Dependencies", "Dependencies", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
-	ProjectSection(SolutionItems) = preProject
-		BibliotecaDependency.cs = BibliotecaDependency.cs
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,7 +103,6 @@ Global
 		{C877F74C-E2C5-4F6A-89F0-99D17286A363} = {6E19B751-93FA-4343-9FA2-B2FBDDBA4363}
 		{DB5B15B8-BBDA-4718-A243-EB95FD326B09} = {2A0A9F43-B4E2-44A4-82D0-D2D34F9E3143}
 		{64577204-C946-400D-B2A7-8230FD24DD69} = {D107F4C8-89CC-BEA8-D3D7-CA6B7733353D}
-		{02EA681E-C7D8-13C7-8484-4AC65E1B71E8} = {4CF2A0E9-4B89-402D-8246-61F2C7415CC6}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7473E8F-78BC-4D60-B15B-7E77B2F5FFCC}

@@ -8,5 +8,7 @@ namespace SGI.Application.Interfaces
     public interface IDevolucionService : IBaseService<DevolucionSaveDto, DevolucionUpdateDto, DevolucionRemoveDto>
     {
         Task<OperationResult> GetDevolucionesByUsuarioId(int usuarioId);
+
+        Task<OperationResult> GetByPrestamoId(int prestamoId);
     }
 }
