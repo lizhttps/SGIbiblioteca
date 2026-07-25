@@ -1,0 +1,45 @@
+﻿@model SGI.WEB.Models.Penalizacion.PenalizacionCreateModel
+@{
+    ViewData["Title"] = "Crear Penalización";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white border-0 pt-4 px-4">
+                    <h3 class="fw-bold text-primary mb-1">
+                        <i class="bi bi-plus-circle me-2"></i>Nueva Penalización
+                    </h3>
+                    <p class="text-muted small mb-0">Ingrese los datos para registrar la sanción</p>
+                </div>
+                <div class="card-body p-4">
+                    <form asp-action="Create" method="post">
+                        <input type="hidden" asp-for="UsuarioMod" value="1" />
+                        <input type="hidden" asp-for="FechaMod" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+
+                        <div class="mb-3">
+                            <label asp-for="UsuarioId" class="form-label fw-semibold">ID Usuario</label>
+                            <input asp-for="UsuarioId" class="form-control rounded-3" type="number" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Motivo" class="form-label fw-semibold">Motivo de la Penalización</label>
+                            <textarea asp-for="Motivo" class="form-control rounded-3" rows="3" required></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Monto" class="form-label fw-semibold">Monto ($)</label>
+                            <input asp-for="Monto" class="form-control rounded-3" type="number" step="0.01" required />
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
+                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

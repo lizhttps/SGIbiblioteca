@@ -6,4 +6,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SGI.Application\SGI.Application.csproj" />
+    <ProjectReference Include="..\SGI.IO\SGI.IOC.csproj" />
+    <ProjectReference Include="..\SGI.Persistence\SGI.Persistence.csproj" />
+    <ProjectReference Include="..\SGIbiblioteca.Domain\SGIbiblioteca.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.23" />
+  </ItemGroup>
+
 </Project>
