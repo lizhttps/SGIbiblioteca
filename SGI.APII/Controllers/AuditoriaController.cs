@@ -2,66 +2,98 @@
 using SGI.Application.Dtos.Auditoria;
 using SGI.Application.Interfaces;
 
-
 namespace SGI.APII.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class AuditoriaController : ControllerBase
     {
-        private readonly IAuditoriaService _AuditoriaService;
+        private readonly IAuditoriaService _auditoriaService;
+        private readonly ILoggerService _loggerService;
 
-        public AuditoriaController(IAuditoriaService AuditoriaService)
+        public AuditoriaController(IAuditoriaService auditoriaService, ILoggerService loggerService)
         {
-            _AuditoriaService = AuditoriaService;
+            _auditoriaService = auditoriaService;
+            _loggerService = loggerService;
         }
-
-
 
         [HttpGet("GetAuditorias")]
         public async Task<IActionResult> GetData()
         {
-            var result = await _AuditoriaService.GetData();
+            try
+            {
+                var result = await _auditoriaService.GetData();
+                if (result.Success)
+                    return Ok(result);
 
-            if (result.Success)
-                return Ok(result);
-            else
+                _loggerService.LogWarning($"No se pudo obtener la lista de auditorías. Mensaje: {result.Message}");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, "Error al obtener la lista de auditorías.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
-
 
         [HttpGet("GetAuditoriaByID")]
         public async Task<IActionResult> GetDataById(int id)
         {
-            var result = await _AuditoriaService.GetDataById(id);
+            try
+            {
+                var result = await _auditoriaService.GetDataById(id);
+                if (result.Success)
+                    return Ok(result);
 
-            if (result.Success)
-                return Ok(result);
-            else
+                _loggerService.LogWarning($"No se encontró la auditoría con id {id}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al buscar la auditoría con id {id}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpGet("GetAuditByEntidad")]
         public async Task<IActionResult> GetAuditoriaByEntidad([FromQuery] string? entidad)
         {
-            var result = await _AuditoriaService.GetByEntidad(entidad);
+            try
+            {
+                var result = await _auditoriaService.GetByEntidad(entidad);
+                if (result.Success)
+                    return Ok(result);
 
-            if (result.Success)
-                return Ok(result);
-            else
+                _loggerService.LogWarning($"No se pudo obtener auditoría para la entidad {entidad}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al buscar auditoría para la entidad {entidad}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
-
-
         [HttpPost("CreateAudit")]
-        public async Task<IActionResult> Post([FromBody] AuditoriaSaveDto AuditoriaSaveDto)
+        public async Task<IActionResult> Post([FromBody] AuditoriaSaveDto dto)
         {
-            var result = await _AuditoriaService.Save(AuditoriaSaveDto);
-            if (result.Success)
-                return Ok(result);
-            else
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _auditoriaService.Save(dto);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo crear el registro de auditoría. Mensaje: {result.Message}");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, "Error al crear el registro de auditoría.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
     }
 }

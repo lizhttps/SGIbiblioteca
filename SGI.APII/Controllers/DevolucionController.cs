@@ -9,80 +9,151 @@ namespace SGI.APII.Controllers
     public class DevolucionController : ControllerBase
     {
         private readonly IDevolucionService _devolucionService;
+        private readonly ILoggerService _loggerService;
 
-        public DevolucionController(IDevolucionService devolucionService)
+        public DevolucionController(IDevolucionService devolucionService, ILoggerService loggerService)
         {
             _devolucionService = devolucionService;
+            _loggerService = loggerService;
         }
 
         [HttpGet("GetDevoluciones")]
         public async Task<IActionResult> GetData()
         {
-            var result = await _devolucionService.GetData();
-            if (result.Success)
-                return Ok(result);
-            else
+            try
+            {
+                var result = await _devolucionService.GetData();
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo obtener la lista de devoluciones. Mensaje: {result.Message}");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, "Error al obtener la lista de devoluciones.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpGet("GetDevolucionByID")]
-        public async Task<IActionResult> GetDataById(int devoid)
+        public async Task<IActionResult> GetDataById(int devoId)
         {
-            var result = await _devolucionService.GetDataById(devoid);
-            if (result.Success)
-                return Ok(result);
-            else
+            try
+            {
+                var result = await _devolucionService.GetDataById(devoId);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se encontró la devolución con id {devoId}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al buscar la devolución con id {devoId}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpGet("GetDevolucionesByUsuario")]
         public async Task<IActionResult> GetDevolucionesByUsuarioId(int usuarioId)
         {
-            var result = await _devolucionService.GetDevolucionesByUsuarioId(usuarioId);
-            if (result.Success)
-                return Ok(result);
-            else
+            try
+            {
+                var result = await _devolucionService.GetDevolucionesByUsuarioId(usuarioId);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudieron obtener devoluciones del usuario {usuarioId}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al buscar devoluciones del usuario {usuarioId}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpGet("GetDevolucionByPrestamo")]
-        public async Task<IActionResult> GetByPrestamoId(int prestamoid)
+        public async Task<IActionResult> GetByPrestamoId(int prestamoId)
         {
-            var result = await _devolucionService.GetByPrestamoId(prestamoid);
-            if (result.Success)
-                return Ok(result);
-            else
+            try
+            {
+                var result = await _devolucionService.GetByPrestamoId(prestamoId);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se encontró devolución para el préstamo {prestamoId}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al buscar devolución para el préstamo {prestamoId}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpPost("CreateDevolucion")]
         public async Task<IActionResult> Create([FromBody] DevolucionSaveDto dto)
         {
-            var result = await _devolucionService.Save(dto);
-            if (result.Success)
-                return Ok(result);
-            else
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _devolucionService.Save(dto);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo registrar la devolución. Mensaje: {result.Message}");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, "Error al registrar la devolución.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpPost("ModifyDevolucion")]
         public async Task<IActionResult> Modify([FromBody] DevolucionUpdateDto dto)
         {
-            var result = await _devolucionService.Update(dto);
-            if (result.Success)
-                return Ok(result);
-            else
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _devolucionService.Update(dto);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo modificar la devolución con id {dto.Id}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al modificar la devolución con id {dto.Id}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
 
         [HttpPost("DisabledDevolucion")]
         public async Task<IActionResult> Disable([FromBody] DevolucionRemoveDto dto)
         {
-            var result = await _devolucionService.Remove(dto);
-            if (result.Success)
-                return Ok(result);
-            else
+            try
+            {
+                var result = await _devolucionService.Remove(dto);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo deshabilitar la devolución con id {dto.Id}.");
                 return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al deshabilitar la devolución con id {dto.Id}.");
+                return StatusCode(500, "Ocurrió un error inesperado.");
+            }
         }
     }
 }
