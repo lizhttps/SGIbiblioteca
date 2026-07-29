@@ -1,4 +1,4 @@
-﻿@model SGI.WEB.Models.Libro.LibroResponse
+﻿@model SGI.WEB.Models.ApiResponse<SGI.WEB.Models.Libro.LibroEditModel>
 
 @{
     ViewData["Title"] = "Eliminar Libro";
@@ -13,10 +13,14 @@
                 <i class="bi bi-exclamation-triangle-fill display-1"></i>
             </div>
             <h3 class="fw-bold text-danger">¿Eliminar este Libro?</h3>
-            <p class="text-muted">Esta acción desactivará el registro en el sistema de la biblioteca.</p>
+            @if (Model?.Data != null)
+            {
+                <p class="text-muted mb-1"><strong>@Model.Data.Titulo</strong> (@Model.Data.Autor)</p>
+            }
+            <p class="text-muted small">Esta acción desactivará el registro en el sistema de la biblioteca.</p>
 
             <form asp-action="Delete" class="mt-4">
-                <input type="hidden" name="id" value="@ViewBag.Id" />
+                <input type="hidden" name="id" value="@Model?.Data?.Id" />
                 <div class="d-flex justify-content-center gap-3">
                     <a asp-action="Index" class="btn btn-outline-secondary px-4 rounded-pill">
                         <i class="bi bi-x-circle me-1"></i> Cancelar

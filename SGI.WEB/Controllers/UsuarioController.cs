@@ -1,52 +1,30 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Usario;
 using SGI.Application.Interfaces;
+using SGI.WEB.Models;
 using SGI.WEB.Models.Usuario;
-using System.Text.Json;
+using SGI.WEB.Services;
 
 namespace SGI.WEB.Controllers
 {
     public class UsuarioController : Controller
     {
+        private readonly IUsuarioApiService _usuarioApiService;
         private readonly ILoggerService _loggerService;
-        private readonly string _apiBaseUrl = "https://localhost:7289/api/";
 
-        private static readonly JsonSerializerOptions _jsonOptions = new()
+        public UsuarioController(IUsuarioApiService usuarioApiService, ILoggerService loggerService)
         {
-            PropertyNameCaseInsensitive = true
-        };
-
-        public UsuarioController(ILoggerService loggerService)
-        {
+            _usuarioApiService = usuarioApiService;
             _loggerService = loggerService;
         }
 
         // GET: UsuarioController
         public async Task<IActionResult> Index()
         {
-            UsuarioResponse usuarioResponse = null;
+            ApiResponse<List<UsuarioEditModel>> usuarioResponse = null;
             try
             {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync("Usuario/GetUsuario");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        usuarioResponse = JsonSerializer.Deserialize<UsuarioResponse>(responseString, _jsonOptions);
-                    }
-                    else
-                    {
-                        usuarioResponse = new UsuarioResponse
-                        {
-                            Success = false,
-                            Message = "Error al obtener la lista de usuarios.",
-                            Data = null
-                        };
-                    }
-                }
+                usuarioResponse = await _usuarioApiService.GetUsuarios();
             }
             catch (Exception ex)
             {
@@ -60,24 +38,15 @@ namespace SGI.WEB.Controllers
         // GET: UsuarioController/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            UsuarioSingleResponse singleResponse = null;
+            ApiResponse<UsuarioEditModel> singleResponse = null;
             try
             {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Usuario/GetUsuarioByID?usuarioid={id}");
+                singleResponse = await _usuarioApiService.GetUsuarioById(id);
 
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        singleResponse = JsonSerializer.Deserialize<UsuarioSingleResponse>(responseString, _jsonOptions);
-                    }
-                    else
-                    {
-                        _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}. Status: {result.StatusCode}");
-                        return View("Error");
-                    }
+                if (singleResponse == null)
+                {
+                    _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}.");
+                    return View("Error");
                 }
             }
             catch (Exception ex)
@@ -102,18 +71,14 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                using (var client = new HttpClient())
+                var ok = await _usuarioApiService.CreateUsuario(usuariocreate);
+
+                if (ok)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.PostAsJsonAsync("Usuario/CreateUsuario", usuariocreate);
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    return View(usuariocreate);
+                    return RedirectToAction(nameof(Index));
                 }
+
+                return View(usuariocreate);
             }
             catch (Exception ex)
             {
@@ -128,26 +93,16 @@ namespace SGI.WEB.Controllers
             UsuarioEditModel editModel = null;
             try
             {
-                using (var client = new HttpClient())
+                var singleResponse = await _usuarioApiService.GetUsuarioById(id);
+
+                if (singleResponse != null && singleResponse.Success)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Usuario/GetUsuarioByID?usuarioid={id}");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        var singleResponse = JsonSerializer.Deserialize<UsuarioSingleResponse>(responseString, _jsonOptions);
-
-                        if (singleResponse != null && singleResponse.Success)
-                        {
-                            editModel = singleResponse.Data;
-                        }
-                    }
-                    else
-                    {
-                        _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}. Status: {result.StatusCode}");
-                        return View("Error");
-                    }
+                    editModel = singleResponse.Data;
+                }
+                else
+                {
+                    _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}.");
+                    return View("Error");
                 }
             }
             catch (Exception ex)
@@ -167,20 +122,15 @@ namespace SGI.WEB.Controllers
             try
             {
                 model.FechaMod = DateTime.Now;
-                using (var client = new HttpClient())
+                var ok = await _usuarioApiService.ModifyUsuario(model);
+
+                if (ok)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-
-                    var response = await client.PostAsJsonAsync("Usuario/ModifyUsuario", model);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    _loggerService.LogWarning($"No se pudo actualizar el usuario con id {model.Id}. Status: {response.StatusCode}");
-                    return View(model);
+                    return RedirectToAction(nameof(Index));
                 }
+
+                _loggerService.LogWarning($"No se pudo actualizar el usuario con id {model.Id}.");
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -192,24 +142,15 @@ namespace SGI.WEB.Controllers
         // GET: UsuarioController/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            UsuarioSingleResponse singleResponse = null;
+            ApiResponse<UsuarioEditModel> singleResponse = null;
             try
             {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Usuario/GetUsuarioByID?usuarioid={id}");
+                singleResponse = await _usuarioApiService.GetUsuarioById(id);
 
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        singleResponse = JsonSerializer.Deserialize<UsuarioSingleResponse>(responseString, _jsonOptions);
-                    }
-                    else
-                    {
-                        _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}. Status: {result.StatusCode}");
-                        return View("Error");
-                    }
+                if (singleResponse == null)
+                {
+                    _loggerService.LogWarning($"No se pudo obtener el usuario con id {id}.");
+                    return View("Error");
                 }
             }
             catch (Exception ex)
@@ -228,21 +169,14 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                using (var client = new HttpClient())
+                var ok = await _usuarioApiService.DisabledUsuario(id);
+
+                if (!ok)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var removeDto = new UsuarioRemoveDto { Id = id, Estado = false };
-
-                    var response = await client.PostAsJsonAsync("Usuario/DisabledUsuario", removeDto);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    _loggerService.LogWarning($"No se pudo eliminar el usuario con id {id}. Status: {response.StatusCode}");
-                    return RedirectToAction(nameof(Index));
+                    _loggerService.LogWarning($"No se pudo eliminar el usuario con id {id}.");
                 }
+
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {

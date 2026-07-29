@@ -1,0 +1,67 @@
+﻿@model SGI.WEB.Models.Penalizacion.PenalizacionEditModel
+@{
+    ViewData["Title"] = "Eliminar Penalización";
+}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+<div class="container py-4">
+    <div class="mb-4 pb-2 border-bottom">
+        <h2 class="fw-bold text-danger mb-1">
+            <i class="bi bi-exclamation-triangle me-2"></i>Eliminar Penalización
+        </h2>
+        <p class="text-muted small mb-0">Esta acción no se puede deshacer. Confirma los datos antes de continuar.</p>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4">
+            <div class="alert alert-danger d-flex align-items-center rounded-3" role="alert">
+                <i class="bi bi-exclamation-octagon-fill fs-4 me-2"></i>
+                <div>¿Estás seguro de que deseas eliminar esta penalización?</div>
+            </div>
+
+            <dl class="row mb-0">
+                <dt class="col-sm-3 text-muted">@Html.DisplayNameFor(model => model.Id)</dt>
+                <dd class="col-sm-9 fw-semibold">#@Html.DisplayFor(model => model.Id)</dd>
+
+                <dt class="col-sm-3 text-muted">ID Usuario</dt>
+                <dd class="col-sm-9 fw-semibold">#@Html.DisplayFor(model => model.UsuarioId)</dd>
+
+                <dt class="col-sm-3 text-muted">Motivo</dt>
+                <dd class="col-sm-9 fw-semibold">@Html.DisplayFor(model => model.Motivo)</dd>
+
+                <dt class="col-sm-3 text-muted">Monto</dt>
+                <dd class="col-sm-9 fw-semibold">@Model.Monto.ToString("C")</dd>
+
+                <dt class="col-sm-3 text-muted">Estado</dt>
+                <dd class="col-sm-9 fw-semibold">
+                    @if (Model.Pagada)
+                    {
+                        <span class="badge bg-success-subtle text-success border border-success px-3 py-1 rounded-pill">Pagada</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-1 rounded-pill">Pendiente</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-3 text-muted">Fecha Modificación</dt>
+                <dd class="col-sm-9 fw-semibold">@Model.FechaMod.ToString("dd/MM/yyyy")</dd>
+
+                <dt class="col-sm-3 text-muted">Usuario Mod</dt>
+                <dd class="col-sm-9 fw-semibold">@Html.DisplayFor(model => model.UsuarioMod)</dd>
+            </dl>
+
+            <hr class="my-4" />
+
+            <form asp-action="Delete" asp-route-id="@Model.Id">
+                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                    <i class="bi bi-trash me-2"></i>Confirmar Eliminación
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4 ms-2">
+                    <i class="bi bi-arrow-left me-2"></i>Cancelar
+                </a>
+            </form>
+        </div>
+    </div>
+</div>

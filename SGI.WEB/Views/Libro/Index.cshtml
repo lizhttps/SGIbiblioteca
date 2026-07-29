@@ -1,4 +1,4 @@
-﻿@model SGI.WEB.Models.Libro.LibroResponse
+﻿@model SGI.WEB.Models.ApiResponse<List<SGI.WEB.Models.Libro.LibroEditModel>>
 
 @{
     ViewData["Title"] = "Gestión de Libros";
@@ -89,4 +89,11 @@
             </div>
         </div>
     </div>
+
+    @if (Model?.Success == false)
+    {
+        <div class="alert alert-danger mt-4 rounded-3" role="alert">
+            <i class="bi bi-exclamation-octagon me-2"></i>@Model.Message
+        </div>
+    }
 </div>

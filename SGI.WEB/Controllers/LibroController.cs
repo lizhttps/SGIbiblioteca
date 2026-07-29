@@ -1,84 +1,45 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Dtos.Libros;
 using SGI.Application.Interfaces;
 using SGI.WEB.Models.Libro;
-using SGIbiblioteca.Domain.Entidades.Configuracion.Libros;
+using SGI.WEB.Services;
 
 namespace SGI.WEB.Controllers
 {
     public class LibroController : Controller
     {
+        private readonly ILibroApiService _libroApiService;
         private readonly ILoggerService _loggerService;
-        private readonly string _apiBaseUrl = "https://localhost:7289/api/";
 
-        private static readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new()
+        public LibroController(ILibroApiService libroApiService, ILoggerService loggerService)
         {
-            PropertyNameCaseInsensitive = true
-        };
-
-        public LibroController(ILoggerService loggerService)
-        {
+            _libroApiService = libroApiService;
             _loggerService = loggerService;
         }
 
         // GET: LibroController
         public async Task<IActionResult> Index()
         {
-            LibroResponse libroResponse = null;
             try
             {
-                using (var client = new HttpClient())
-                {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync("Libro/GetLibros");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        libroResponse = System.Text.Json.JsonSerializer.Deserialize<LibroResponse>(responseString, _jsonOptions);
-                    }
-                    else
-                    {
-                        libroResponse = new LibroResponse
-                        {
-                            Success = false,
-                            Message = "Error al obtener la lista de libros.",
-                            Data = null
-                        };
-                    }
-                }
+                var libroResponse = await _libroApiService.GetLibros();
+                return View(libroResponse);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de libros.");
                 return View("Error");
             }
-
-            return View(libroResponse);
         }
 
         // GET: LibroController/Details/5
-        // GET: LibroController/Details/5
         public async Task<IActionResult> Details(int id)
         {
-            LibroEditModel libro = null;
             try
             {
-                using (var client = new HttpClient())
+                var singleResponse = await _libroApiService.GetLibroById(id);
+                if (singleResponse != null && singleResponse.Success && singleResponse.Data != null)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Libro/GetLibroByID?id={id}");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        var singleResponse = System.Text.Json.JsonSerializer.Deserialize<LibroSingleResponse>(responseString, _jsonOptions);
-
-                        if (singleResponse != null && singleResponse.Success)
-                        {
-                            libro = singleResponse.Data;
-                        }
-                    }
+                    return View(singleResponse.Data);
                 }
             }
             catch (Exception ex)
@@ -87,10 +48,8 @@ namespace SGI.WEB.Controllers
                 return View("Error");
             }
 
-            if (libro == null) return RedirectToAction(nameof(Index));
-            return View(libro);
+            return RedirectToAction(nameof(Index));
         }
-
 
         // GET: LibroController/Create
         public ActionResult Create()
@@ -105,19 +64,13 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                using (var client = new HttpClient())
+                var success = await _libroApiService.CreateLibro(librocreate);
+                if (success)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-
-                    var result = await client.PostAsJsonAsync("Libro/CreateLibro", librocreate);
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    return View(librocreate);
+                    return RedirectToAction(nameof(Index));
                 }
+
+                return View(librocreate);
             }
             catch (Exception ex)
             {
@@ -130,45 +83,23 @@ namespace SGI.WEB.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            LibroEditModel editModel = null;
             try
             {
-                using (var client = new HttpClient())
+                var singleResponse = await _libroApiService.GetLibroById(id);
+                if (singleResponse != null && singleResponse.Success && singleResponse.Data != null)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Libro/GetLibroByID?id={id}");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        var singleResponse = System.Text.Json.JsonSerializer.Deserialize<LibroSingleResponse>(responseString, _jsonOptions);
-
-                        if (singleResponse != null && singleResponse.Success)
-                        {
-                            editModel = singleResponse.Data; 
-                        }
-                    }
-                    else
-                    {
-                        _loggerService.LogWarning($"No se pudo obtener el libro con id {id}. Status: {result.StatusCode}");
-                        return View("Error");
-                    }
+                    return View(singleResponse.Data);
                 }
+
+                _loggerService.LogWarning($"No se pudo obtener el libro con id {id}.");
+                return View("Error");
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener el libro para editar.");
                 return View("Error");
             }
-
-            if (editModel == null)
-            {
-                return RedirectToAction(nameof(Index));
-            }
-
-            return View(editModel); 
         }
-
 
         // POST: LibroController/Edit/5
         [HttpPost]
@@ -178,20 +109,14 @@ namespace SGI.WEB.Controllers
             try
             {
                 model.FechaMod = DateTime.Now;
-                using (var client = new HttpClient())
+                var success = await _libroApiService.ModifyLibro(model);
+                if (success)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-
-                    var response = await client.PostAsJsonAsync("Libro/ModifyLibro", model);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    _loggerService.LogWarning($"No se pudo actualizar el libro con id {model.Id}. Status: {response.StatusCode}");
-                    return View(model);
+                    return RedirectToAction(nameof(Index));
                 }
+
+                _loggerService.LogWarning($"No se pudo actualizar el libro con id {model.Id}.");
+                return View(model);
             }
             catch (Exception ex)
             {
@@ -203,33 +128,22 @@ namespace SGI.WEB.Controllers
         // GET: LibroController/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            LibroResponse libroResponse = null;
             try
             {
-                using (var client = new HttpClient())
+                var singleResponse = await _libroApiService.GetLibroById(id);
+                if (singleResponse != null)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var result = await client.GetAsync($"Libro/GetLibroByID/{id}");
-
-                    if (result.IsSuccessStatusCode)
-                    {
-                        var responseString = await result.Content.ReadAsStringAsync();
-                        libroResponse = System.Text.Json.JsonSerializer.Deserialize<LibroResponse>(responseString, _jsonOptions);
-                    }
-                    else
-                    {
-                        _loggerService.LogWarning($"No se pudo obtener el libro con id {id}. Status: {result.StatusCode}");
-                        return View("Error");
-                    }
+                    return View(singleResponse);
                 }
+
+                _loggerService.LogWarning($"No se pudo obtener el libro con id {id}.");
+                return View("Error");
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener el libro para eliminar.");
                 return View("Error");
             }
-
-            return View(libroResponse);
         }
 
         // POST: LibroController/Delete/5
@@ -239,21 +153,12 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                using (var client = new HttpClient())
+                var success = await _libroApiService.DisabledLibro(id);
+                if (!success)
                 {
-                    client.BaseAddress = new Uri(_apiBaseUrl);
-                    var removeDto = new LibroRemoveDto { Id = id, Estado = false };
-
-                    var response = await client.PostAsJsonAsync("Libro/DisabledLibro", removeDto);
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        return RedirectToAction(nameof(Index));
-                    }
-
-                    _loggerService.LogWarning($"No se pudo eliminar el libro con id {id}. Status: {response.StatusCode}");
-                    return RedirectToAction(nameof(Index));
+                    _loggerService.LogWarning($"No se pudo eliminar el libro con id {id}.");
                 }
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
