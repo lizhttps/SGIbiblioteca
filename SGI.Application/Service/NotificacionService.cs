@@ -3,6 +3,8 @@ using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Notificaciones;
 using SGIbiblioteca.Domain.Repositorio;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.Application.Service
 {
@@ -23,6 +25,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _NotificacionRepository.GetAllAsync())
+                    .Where(Noti => Noti.Estado)
                     .Select(Noti => new NotificacionUpdateDto()
                     {
                         Id = Noti.Id,
@@ -85,15 +88,17 @@ namespace SGI.Application.Service
             try
             {
                 var notificaciones = await _NotificacionRepository.GetByUsuarioIdAsync(usuarioid);
-                var notificacionresult = notificaciones.Select(n => new NotificacionUpdateDto()
-                {
-                    Id = n.Id,
-                    UsuarioId = n.UsuarioId,
-                    Mensaje = n.Mensaje,
-                    Leido = n.Leido,
-                    FechaMod = n.FechaCreacion,
-                    UsuarioMod = int.TryParse(n.CreadoPor, out int user) ? user : 0
-                }).ToList();
+                var notificacionresult = notificaciones
+                    .Where(n => n.Estado)
+                    .Select(n => new NotificacionUpdateDto()
+                    {
+                        Id = n.Id,
+                        UsuarioId = n.UsuarioId,
+                        Mensaje = n.Mensaje,
+                        Leido = n.Leido,
+                        FechaMod = n.FechaCreacion,
+                        UsuarioMod = int.TryParse(n.CreadoPor, out int user) ? user : 0
+                    }).ToList();
 
                 result.Data = notificacionresult;
             }
@@ -114,7 +119,7 @@ namespace SGI.Application.Service
             {
                 var NotificacionToDelete = await _NotificacionRepository.GetEntityByIdAsync(dto.Id);
 
-                if (NotificacionToDelete == null) // si el Notificacion no existe, devolvemos un error.
+                if (NotificacionToDelete == null)
                 {
                     result.Success = false;
                     result.Message = "Notificacion no encontrada.";
@@ -122,10 +127,13 @@ namespace SGI.Application.Service
                 }
                 NotificacionToDelete.Estado = dto.Estado;
 
-                // Notificacion no tiene una entidad de estado
-
-
-                await _NotificacionRepository.UpdateEntityAsync(NotificacionToDelete);
+                var updateResult = await _NotificacionRepository.UpdateEntityAsync(NotificacionToDelete);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al intentar eliminar la notificacion.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -171,14 +179,27 @@ namespace SGI.Application.Service
             try
             {
                 var NotficicacionToUpdate = await _NotificacionRepository.GetEntityByIdAsync(dto.Id);
+
+                if (NotficicacionToUpdate == null)
+                {
+                    result.Success = false;
+                    result.Message = "Notificacion no encontrada.";
+                    return result;
+                }
+
                 NotficicacionToUpdate.UsuarioId = dto.UsuarioId;
                 NotficicacionToUpdate.Mensaje = dto.Mensaje;
                 NotficicacionToUpdate.Leido = dto.Leido;
                 NotficicacionToUpdate.ModificadoPor = dto.UsuarioMod.ToString();
                 NotficicacionToUpdate.FechaModificacion = dto.FechaMod;
 
-
-                await _NotificacionRepository.UpdateEntityAsync(NotficicacionToUpdate);
+                var updateResult = await _NotificacionRepository.UpdateEntityAsync(NotficicacionToUpdate);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error actualizando la Notificacion";
+                    return result;
+                }
             }
             catch (Exception ex)
             {

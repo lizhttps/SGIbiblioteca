@@ -1,0 +1,23 @@
+﻿@{
+    ViewData["Title"] = "Acceso Denegado";
+    string? returnUrl = ViewBag.ReturnUrl as string;
+}
+<div class="container mt-5 text-center">
+    <div class="card shadow p-4 mx-auto" style="max-width: 500px;">
+        <h1 class="text-danger display-1"><i class="bi bi-shield-lock-fill"></i> 403</h1>
+        <h3 class="text-secondary">Acceso Restringido</h3>
+        <p class="text-muted mt-3">
+            No tienes los permisos necesarios (Rol de Bibliotecario) para acceder a este módulo u operación.
+        </p>
+        <div class="mt-4">
+            @if (!string.IsNullOrEmpty(returnUrl))
+            {
+                <a href="@returnUrl" class="btn btn-primary">Volver</a>
+            }
+            else
+            {
+                <a asp-controller="Libro" asp-action="Index" class="btn btn-primary">Volver al Catálogo</a>
+            }
+        </div>
+    </div>
+</div>

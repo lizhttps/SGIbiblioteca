@@ -3,13 +3,12 @@ using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Repositorio;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Libros;
-
+using SGIbiblioteca.Domain.Interfaces;
 
 namespace SGI.Application.Service
 {
     public class LibroService : ILibroService
     {
-
         private readonly ILibroRepository _libroRepository;
         private readonly ILoggerService _logger;
 
@@ -18,6 +17,7 @@ namespace SGI.Application.Service
             _libroRepository = LibroRepository;
             _logger = logger;
         }
+
         public async Task<OperationResult> GetByISBN(string isbn)
         {
             OperationResult result = new OperationResult();
@@ -37,14 +37,13 @@ namespace SGI.Application.Service
                     CantidadDisponible = libroid.CantidadDisponible,
                     Estado = libroid.Estado,
                     FechaMod = libroid.FechaCreacion,
-                    UsuarioMod = int.TryParse(libroid.CreadoPor, out int user) ? user : 0 // usuario realizando la modificacion
+                    UsuarioMod = int.TryParse(libroid.CreadoPor, out int user) ? user : 0
                 };
 
                 result.Data = libroresult;
             }
             catch (Exception ex)
             {
-
                 result.Success = false;
                 result.Message = "Error obteniendo";
                 _logger.LogError(ex, result.Message);
@@ -53,13 +52,16 @@ namespace SGI.Application.Service
             return result;
         }
 
-
         public async Task<OperationResult> GetData()
         {
             OperationResult result = new OperationResult();
             try
             {
-                result.Data = (await _libroRepository.GetAllAsync())
+                var libros = await _libroRepository.GetAllAsync();
+
+                // FILTRO: Solo devuelves los libros que NO están eliminados/inactivos
+                result.Data = libros
+                    .Where(libro => libro.Estado != "false" && libro.Estado != "0" && libro.Estado != "Inactivo")
                     .Select(libro => new LibroUpdateDto()
                     {
                         Id = libro.Id,
@@ -124,7 +126,6 @@ namespace SGI.Application.Service
             return result;
         }
 
-
         public async Task<OperationResult> Remove(LibroRemoveDto dto)
         {
             OperationResult result = new OperationResult();
@@ -133,15 +134,15 @@ namespace SGI.Application.Service
             {
                 var libroToDelete = await _libroRepository.GetEntityByIdAsync(dto.Id);
 
-                if (libroToDelete == null) // si el libro no existe, devolvemos un error.
+                if (libroToDelete == null)
                 {
                     result.Success = false;
                     result.Message = "Libro no encontrado.";
                     return result;
                 }
-                AuditEntity baseLibro = libroToDelete;
-                baseLibro.Estado = dto.Estado;
 
+                // Si dto.Estado es bool, lo convertimos a texto ("true"/"false")
+                libroToDelete.Estado = dto.Estado ? "true" : "false";
 
                 await _libroRepository.UpdateEntityAsync(libroToDelete);
             }
@@ -163,29 +164,25 @@ namespace SGI.Application.Service
             {
                 result = await _libroRepository.SaveEntityAsync(new Libro()
                 {
-
                     Titulo = dto.Titulo,
                     Autor = dto.Autor,
                     ISBN = dto.ISBN,
                     Categoria = dto.Categoria,
                     CantidadTotal = dto.CantidadTotal,
                     CantidadDisponible = dto.CantidadDisponible,
-                    Estado = dto.Estado,
+                    Estado = string.IsNullOrEmpty(dto.Estado) ? "true" : dto.Estado,
                     FechaCreacion = dto.FechaMod,
                     CreadoPor = dto.UsuarioMod.ToString()
-
                 });
             }
             catch (Exception ex)
             {
-
                 result.Success = false;
                 result.Message = "Error guardando el Libro";
                 _logger.LogError(ex, result.Message);
             }
             return result;
         }
-
 
         public async Task<OperationResult> Update(LibroUpdateDto dto)
         {

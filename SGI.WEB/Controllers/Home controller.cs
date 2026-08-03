@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Interfaces;
-using SGI.WEB.Models;
+using SGIbiblioteca.Domain.Interfaces;
 using System.Diagnostics;
 
 namespace SGI.WEB.Controllers

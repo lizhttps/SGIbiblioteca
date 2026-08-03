@@ -3,6 +3,8 @@ using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entities.Penalizaciones;
 using SGIbiblioteca.Domain.Repositorio;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.Application.Service
 {
@@ -24,6 +26,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _penalizacionRepository.GetAllAsync())
+                    .Where(p => p.Estado)
                     .Select(p => new PenalizacionUpdateDto()
                     {
                         Id = p.Id,
@@ -122,8 +125,13 @@ namespace SGI.Application.Service
                 penalizacion.Pagada = dto.Pagada;
                 penalizacion.ModificadoPor = dto.UsuarioMod.ToString();
                 penalizacion.FechaModificacion = dto.FechaMod;
-
-                await _penalizacionRepository.UpdateEntityAsync(penalizacion);
+                var updateResult = await _penalizacionRepository.UpdateEntityAsync(penalizacion);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al actualizar la penalizacion.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -134,7 +142,6 @@ namespace SGI.Application.Service
             return result;
         }
 
-        // ARREGLAR METODOD REMOVE.
         public async Task<OperationResult> Remove(PenalizacionRemoveDto dto)
         {
             OperationResult result = new OperationResult();
@@ -148,7 +155,13 @@ namespace SGI.Application.Service
                     return result;
                 }
                 penalizacion.Estado = dto.Estado;
-                await _penalizacionRepository.UpdateEntityAsync(penalizacion);
+                var updateResult = await _penalizacionRepository.UpdateEntityAsync(penalizacion);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al eliminar la penalización.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -165,6 +178,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _penalizacionRepository.GetByUsuarioIdAsync(usuarioId))
+                    .Where(p => p.Estado)
                     .Select(p => new PenalizacionUpdateDto()
                     {
                         Id = p.Id,
@@ -185,15 +199,13 @@ namespace SGI.Application.Service
             }
             return result;
         }
-
-        // GetPenalizacionesVencidasByUsuarioId filtra solo por !p.Pagada
         public async Task<OperationResult> GetPenalizacionesVencidasByUsuarioId(int usuarioId)
         {
             OperationResult result = new OperationResult();
             try
             {
                 result.Data = (await _penalizacionRepository.GetByUsuarioIdAsync(usuarioId))
-                    .Where(p => !p.Pagada)
+                    .Where(p => p.Estado && !p.Pagada)
                     .Select(p => new PenalizacionUpdateDto()
                     {
                         Id = p.Id,

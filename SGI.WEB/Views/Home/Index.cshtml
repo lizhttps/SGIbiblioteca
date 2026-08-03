@@ -2,19 +2,24 @@
     Layout = "_Layout";
     ViewData["Title"] = "Inicio";
 }
-
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <div class="text-center mb-5">
     <h1 class="display-5 fw-bold text-primary">Sistema de Gestión SGI</h1>
-    <p class="lead text-muted">Selecciona un módulo para comenzar</p>
+    @if (User.Identity != null && User.Identity.IsAuthenticated)
+    {
+        <p class="lead text-muted mb-1">Hola, @User.Identity.Name</p>
+    }
+    <p class="text-muted">Selecciona un módulo para comenzar</p>
 </div>
 
-<div class="row g-4">
+<div class="row g-4 justify-content-center">
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4 hover-card">
             <div class="card-body text-center py-4">
-                <i class="bi bi-book-half display-5 text-primary mb-3 d-block"></i>
+                <div class="icon-circle bg-primary bg-opacity-10 mb-3">
+                    <i class="bi bi-book-half text-primary"></i>
+                </div>
                 <h5 class="card-title fw-bold">Libros</h5>
                 <p class="card-text text-muted small">Consulta, agrega o edita el catálogo de libros.</p>
                 <a asp-controller="Libro" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Libros</a>
@@ -23,46 +28,84 @@
     </div>
 
     <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
+        <div class="card h-100 shadow-sm border-0 rounded-4 hover-card">
             <div class="card-body text-center py-4">
-                <i class="bi bi-arrow-left-right display-5 text-primary mb-3 d-block"></i>
+                <div class="icon-circle bg-primary bg-opacity-10 mb-3">
+                    <i class="bi bi-arrow-left-right text-primary"></i>
+                </div>
                 <h5 class="card-title fw-bold">Préstamos</h5>
-                <p class="card-text text-muted small">Gestiona los préstamos activos y su historial.</p>
+                <p class="card-text text-muted small">
+                    @(User.IsInRole("Bibliotecario")
+                                        ? "Gestiona los préstamos activos y su historial."
+                                        : "Solicita un préstamo y consulta tu historial.")
+                </p>
                 <a asp-controller="Prestamo" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Préstamos</a>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-            <div class="card-body text-center py-4">
-                <i class="bi bi-people display-5 text-primary mb-3 d-block"></i>
-                <h5 class="card-title fw-bold">Usuarios</h5>
-                <p class="card-text text-muted small">Administra los usuarios del sistema.</p>
-                <a asp-controller="Usuario" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Usuarios</a>
+    @if (User.IsInRole("Bibliotecario"))
+    {
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body text-center py-4">
+                    <div class="icon-circle bg-primary bg-opacity-10 mb-3">
+                        <i class="bi bi-people text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Usuarios</h5>
+                    <p class="card-text text-muted small">Administra los usuarios del sistema.</p>
+                    <a asp-controller="Usuario" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Usuarios</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-            <div class="card-body text-center py-4">
-                <i class="bi bi-exclamation-triangle display-5 text-primary mb-3 d-block"></i>
-                <h5 class="card-title fw-bold">Penalizaciones</h5>
-                <p class="card-text text-muted small">Gestiona multas y sanciones a usuarios.</p>
-                <a asp-controller="Penalizacion" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Penalizaciones</a>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body text-center py-4">
+                    <div class="icon-circle bg-primary bg-opacity-10 mb-3">
+                        <i class="bi bi-exclamation-triangle text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Penalizaciones</h5>
+                    <p class="card-text text-muted small">Gestiona multas y sanciones a usuarios.</p>
+                    <a asp-controller="Penalizacion" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Penalizaciones</a>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm border-0 rounded-4">
-            <div class="card-body text-center py-4">
-                <i class="bi bi-arrow-return-left display-5 text-primary mb-3 d-block"></i>
-                <h5 class="card-title fw-bold">Devoluciones</h5>
-                <p class="card-text text-muted small">Registra devoluciones de préstamos.</p>
-                <a asp-controller="Devolucion" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Devoluciones</a>
+        <div class="col-md-4">
+            <div class="card h-100 shadow-sm border-0 rounded-4 hover-card">
+                <div class="card-body text-center py-4">
+                    <div class="icon-circle bg-primary bg-opacity-10 mb-3">
+                        <i class="bi bi-arrow-return-left text-primary"></i>
+                    </div>
+                    <h5 class="card-title fw-bold">Devoluciones</h5>
+                    <p class="card-text text-muted small">Registra devoluciones de préstamos.</p>
+                    <a asp-controller="Devolucion" asp-action="Index" class="btn btn-primary rounded-pill px-4">Ir a Devoluciones</a>
+                </div>
             </div>
         </div>
-    </div>
+    }
 </div>
+
+<style>
+    .icon-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-left: auto;
+        margin-right: auto;
+        font-size: 1.75rem;
+    }
+
+    .hover-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+        .hover-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1) !important;
+        }
+</style>

@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Interfaces;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Libro;
 using SGI.WEB.Services;
 
 namespace SGI.WEB.Controllers
 {
+    [Authorize] // Exige estar logueado (cualquier rol)
     public class LibroController : Controller
     {
         private readonly ILibroApiService _libroApiService;
@@ -16,7 +19,7 @@ namespace SGI.WEB.Controllers
             _loggerService = loggerService;
         }
 
-        // GET: LibroController
+        // PÚBLICO PARA CUALQUIER ROL (Estudiante, Docente, Bibliotecario)
         public async Task<IActionResult> Index()
         {
             try
@@ -31,7 +34,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: LibroController/Details/5
+        // PÚBLICO PARA CUALQUIER ROL
         public async Task<IActionResult> Details(int id)
         {
             try
@@ -51,19 +54,27 @@ namespace SGI.WEB.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: LibroController/Create
+        // --- DE AQUÍ EN ADELANTE SOLO BIBLIOTECARIO ---
+
+        [Authorize(Roles = "Bibliotecario")]
         public ActionResult Create()
         {
             return View();
         }
 
-        // POST: LibroController/Create
+        [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(LibroCreateModel librocreate)
         {
             try
             {
+                // Asignación de datos auditables y estado por defecto para el nuevo libro
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                librocreate.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+                librocreate.FechaMod = DateTime.Now;
+                librocreate.Estado = "true"; // Estado activo por defecto al crear
+
                 var success = await _libroApiService.CreateLibro(librocreate);
                 if (success)
                 {
@@ -79,7 +90,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Libro/Edit/5
+        [Authorize(Roles = "Bibliotecario")]
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
@@ -101,14 +112,18 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // POST: LibroController/Edit/5
+        [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(LibroEditModel model)
         {
             try
             {
+                // Asignar el ID del usuario logueado que realiza la modificación
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                model.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 model.FechaMod = DateTime.Now;
+
                 var success = await _libroApiService.ModifyLibro(model);
                 if (success)
                 {
@@ -125,7 +140,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: LibroController/Delete/5
+        [Authorize(Roles = "Bibliotecario")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -146,7 +161,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // POST: LibroController/Delete/5
+        [Authorize(Roles = "Bibliotecario")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

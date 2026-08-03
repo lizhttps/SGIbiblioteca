@@ -1,10 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Penalizacion;
 using SGI.WEB.Services;
 
 namespace SGI.WEB.Controllers
 {
+    [Authorize(Roles = "Bibliotecario")]
     public class PenalizacionController : Controller
     {
         private readonly IPenalizacionApiService _penalizacionApiService;

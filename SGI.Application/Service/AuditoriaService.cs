@@ -3,6 +3,8 @@ using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entities.Auditorias;
 using SGIbiblioteca.Domain.Repositorio;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.Application.Service
 {

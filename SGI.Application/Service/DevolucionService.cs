@@ -1,5 +1,6 @@
 ﻿using SGI.Application.Dtos.Devolucion;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Devoluciones;
 using SGIbiblioteca.Domain.Repositorio;
@@ -28,6 +29,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _devolucionRepository.GetAllAsync())
+                    .Where(d => d.Estado)
                     .Select(d => new DevolucionUpdateDto()
                     {
                         Id = d.Id,
@@ -125,8 +127,14 @@ namespace SGI.Application.Service
                 devolucion.ModificadoPor = dto.UsuarioMod.ToString();
                 devolucion.DevueltoATiempo = dto.DevueltoATiempo;
 
-
-                await _devolucionRepository.UpdateEntityAsync(devolucion);
+                // Validar resultado del repositorio
+                var updateResult = await _devolucionRepository.UpdateEntityAsync(devolucion);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al actualizar la devolución.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -150,7 +158,15 @@ namespace SGI.Application.Service
                     return result;
                 }
                 devolucion.Estado = dto.Estado;
-                await _devolucionRepository.UpdateEntityAsync(devolucion);
+
+                //  Validar resultado del repositorio
+                var updateResult = await _devolucionRepository.UpdateEntityAsync(devolucion);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al eliminar la devolución.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -193,19 +209,19 @@ namespace SGI.Application.Service
             return result;
         }
 
-        // ARREGLAR METODO
         public async Task<OperationResult> GetDevolucionesByUsuarioId(int usuarioId)
         {
             OperationResult result = new OperationResult();
             try
             {
-                // 1. Traemos los préstamos del usuario
+                //  Traemos los préstamos del usuario
                 var prestamosUsuario = await _prestamoRepository.GetByUsuarioIdAsync(usuarioId);
                 var prestamosIds = prestamosUsuario.Select(p => p.Id).ToList();
 
-                // 2. Traemos las devoluciones que correspondan a esos prestamos
+                // Traemos las devoluciones activas que correspondan a esos prestamos
+                //  Filtrado por Estado == true
                 result.Data = (await _devolucionRepository.GetAllAsync())
-                    .Where(d => prestamosIds.Contains(d.PrestamoId))
+                    .Where(d => d.Estado && prestamosIds.Contains(d.PrestamoId))
                     .Select(d => new DevolucionUpdateDto()
                     {
                         Id = d.Id,

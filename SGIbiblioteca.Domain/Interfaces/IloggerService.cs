@@ -1,4 +1,6 @@
-﻿namespace SGI.Application.Interfaces
+﻿using System;
+
+namespace SGIbiblioteca.Domain.Interfaces
 {
     public interface ILoggerService
     {

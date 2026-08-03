@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Dtos.Usario;
-using SGI.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models;
 using SGI.WEB.Models.Usuario;
 using SGI.WEB.Services;
 
 namespace SGI.WEB.Controllers
 {
+    [Authorize(Roles = "Bibliotecario")]
     public class UsuarioController : Controller
     {
         private readonly IUsuarioApiService _usuarioApiService;

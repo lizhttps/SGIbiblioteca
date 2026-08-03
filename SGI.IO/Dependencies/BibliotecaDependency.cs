@@ -1,10 +1,12 @@
 using Microsoft.Extensions.DependencyInjection;
+using SGIbiblioteca.Domain.Interfaces;
 using SGIbiblioteca.Domain.Repositorio;
 using SGI.Persistence.Repositorios;
 using SGI.Application.Interfaces;
 using SGI.Application.Service;
 using SGI.Application.Services;
 namespace SGI.IOC.Dependencies // hola
+
 {
     public static class BibliotecaDependency
     {
@@ -27,6 +29,7 @@ namespace SGI.IOC.Dependencies // hola
             service.AddTransient<IPenalizacionService, PenalizacionService>();
             service.AddTransient<IDevolucionService, DevolucionService>();
             service.AddTransient<IPrestamoService, PrestamoService>();
+            service.AddTransient<IAuthService, AuthService>();
         }
     }
 }

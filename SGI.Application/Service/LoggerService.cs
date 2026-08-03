@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
-using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.Application.Services
 {

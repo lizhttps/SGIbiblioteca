@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Devolucion;
 using SGI.WEB.Services;
+using System.Security.Claims;
 
 namespace SGI.WEB.Controllers
 {
+    [Authorize(Roles = "Bibliotecario")]
     public class DevolucionController : Controller
     {
         private readonly IDevolucionApiService _devolucionApiService;
@@ -16,7 +19,6 @@ namespace SGI.WEB.Controllers
             _loggerService = loggerService;
         }
 
-        // GET: Devolucion
         public async Task<IActionResult> Index()
         {
             try
@@ -31,7 +33,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Devolucion/Details/5
         public async Task<IActionResult> Details(int id)
         {
             try
@@ -65,6 +66,10 @@ namespace SGI.WEB.Controllers
         {
             try
             {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                devolucioncreate.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+                devolucioncreate.FechaMod = DateTime.Now;
+
                 var success = await _devolucionApiService.CreateDevolucion(devolucioncreate);
                 if (success)
                 {
@@ -80,7 +85,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Devolucion/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -108,7 +112,10 @@ namespace SGI.WEB.Controllers
         {
             try
             {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                model.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 model.FechaMod = DateTime.Now;
+
                 var success = await _devolucionApiService.ModifyDevolucion(model);
                 if (success)
                 {
@@ -125,7 +132,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Devolucion/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -146,7 +152,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // POST: Devolucion/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)

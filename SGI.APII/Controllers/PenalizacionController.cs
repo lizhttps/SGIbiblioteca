@@ -1,6 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Penalizacion;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.APII.Controllers
 {

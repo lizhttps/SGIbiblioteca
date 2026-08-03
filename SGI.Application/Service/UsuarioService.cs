@@ -3,6 +3,8 @@ using SGI.Application.Interfaces;
 using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Usuarios;
 using SGIbiblioteca.Domain.Repositorio;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 
 namespace SGI.Application.Service
@@ -64,6 +66,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _UsuarioRepository.GetAllAsync())
+                    .Where(Usuario => Usuario.Estado) // excluye usuarios desactivados
                     .Select(Usuario => new UsuarioUpdateDto()
                     {
                         Id = Usuario.Id,
@@ -137,8 +140,14 @@ namespace SGI.Application.Service
 
                 // usuario no tiene una entidad de estado,p
 
+                var updateResult = await _UsuarioRepository.UpdateEntityAsync(UsuarioToDelete);
 
-                await _UsuarioRepository.UpdateEntityAsync(UsuarioToDelete);
+                if (!updateResult.Success) //  revisa si la actualización realmente se guardó
+                {
+                    result.Success = false;
+                    result.Message = "No se pudo actualizar el estado del usuario.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {

@@ -4,6 +4,8 @@ using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Libros;
 using SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos;
 using SGIbiblioteca.Domain.Repositorio;
+using SGIbiblioteca.Domain.Interfaces;
+
 
 namespace SGI.Application.Service
 {
@@ -35,6 +37,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _prestamoRepository.GetAllAsync())
+                    .Where(p => p.Estado)
                     .Select(p => new PrestamoUpdateDto()
                     {
                         Id = p.Id,
@@ -183,9 +186,13 @@ namespace SGI.Application.Service
                 prestamo.FechaLimite = dto.FechaLimite;
                 prestamo.FechaModificacion = dto.FechaMod;
                 prestamo.ModificadoPor = dto.UsuarioMod.ToString();
-
-
-                await _prestamoRepository.UpdateEntityAsync(prestamo);
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al actualizar el prestamo.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -209,7 +216,13 @@ namespace SGI.Application.Service
                     return result;
                 }
                 prestamo.Estado = dto.Estado;
-                await _prestamoRepository.UpdateEntityAsync(prestamo);
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al eliminar el prestamo.";
+                    return result;
+                }
             }
             catch (Exception ex)
             {
@@ -252,6 +265,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _prestamoRepository.GetByUsuarioIdAsync(usuarioId))
+                    .Where(p => p.Estado)
                     .Select(p => new PrestamoUpdateDto()
                     {
                         Id = p.Id,

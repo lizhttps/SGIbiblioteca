@@ -16,23 +16,48 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Libro" asp-action="Index">Libros</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Usuario" asp-action="Index">Usuarios</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Prestamo" asp-action="Index">Préstamos</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Devolucion" asp-action="Index">Devoluciones</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-controller="Penalizacion" asp-action="Index">Penalizaciones</a>
-                        </li>
-                    </ul>
+                    @if (User.Identity != null && User.Identity.IsAuthenticated)
+                    {
+                        <ul class="navbar-nav flex-grow-1">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Libro" asp-action="Index">Libros</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Prestamo" asp-action="Index">Préstamos</a>
+                            </li>
+                            @if (User.IsInRole("Bibliotecario"))
+                            {
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Usuario" asp-action="Index">Usuarios</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Devolucion" asp-action="Index">Devoluciones</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-dark" asp-controller="Penalizacion" asp-action="Index">Penalizaciones</a>
+                                </li>
+                            }
+                        </ul>
+                        <ul class="navbar-nav">
+                            <li class="nav-item d-flex align-items-center me-3">
+                                <span class="text-muted small">@User.Identity.Name (@(User.IsInRole("Bibliotecario") ? "Bibliotecario" : "Estudiante/Docente"))</span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Cerrar sesión</button>
+                                </form>
+                            </li>
+                        </ul>
+                    }
+                    else
+                    {
+                        <ul class="navbar-nav flex-grow-1"></ul>
+                        <ul class="navbar-nav">
+                            <li class="nav-item">
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Iniciar sesión</a>
+                            </li>
+                        </ul>
+                    }
                 </div>
             </div>
         </nav>
@@ -42,13 +67,11 @@
             @RenderBody()
         </main>
     </div>
-
     <footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2026 - SGI.WEB
         </div>
     </footer>
-
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

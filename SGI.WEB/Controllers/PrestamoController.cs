@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using SGI.Application.Interfaces;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Prestamo;
 using SGI.WEB.Services;
+using System.Security.Claims;
 
 namespace SGI.WEB.Controllers
 {
+    [Authorize]
     public class PrestamoController : Controller
     {
         private readonly IPrestamoApiService _prestamoApiService;
@@ -16,7 +19,6 @@ namespace SGI.WEB.Controllers
             _loggerService = loggerService;
         }
 
-        // GET: Prestamo
         public async Task<IActionResult> Index()
         {
             try
@@ -31,7 +33,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Prestamo/Details/5
         public async Task<IActionResult> Details(int id)
         {
             try
@@ -65,6 +66,18 @@ namespace SGI.WEB.Controllers
         {
             try
             {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+
+                // Solo el Bibliotecario puede elegir para quién es el préstamo.
+                if (!User.IsInRole("Bibliotecario"))
+                {
+                    prestamocreate.UsuarioId = userId;
+                }
+
+                prestamocreate.UsuarioMod = userId;
+                prestamocreate.FechaMod = DateTime.Now;
+
                 var success = await _prestamoApiService.CreatePrestamo(prestamocreate);
                 if (success)
                 {
@@ -80,7 +93,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Prestamo/Edit/5
+        [Authorize(Roles = "Bibliotecario")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -101,14 +114,17 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // POST: Prestamo/Edit/5
+        [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(PrestamoEditModel model)
         {
             try
             {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                model.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 model.FechaMod = DateTime.Now;
+
                 var success = await _prestamoApiService.ModifyPrestamo(model);
                 if (success)
                 {
@@ -125,7 +141,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // GET: Prestamo/Delete/5
+        [Authorize(Roles = "Bibliotecario")]
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -146,7 +162,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
-        // POST: Prestamo/Delete/5
+        [Authorize(Roles = "Bibliotecario")]
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
