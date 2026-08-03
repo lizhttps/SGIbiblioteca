@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Libros;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 
@@ -34,7 +35,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de libros.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener la lista de libros."
+                });
             }
         }
 
@@ -53,7 +58,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar el libro con ISBN {isbn}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar el libro por ISBN."
+                });
             }
         }
 
@@ -72,13 +81,20 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar el libro con id {id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar el libro."
+                });
             }
         }
 
         [HttpPost("CreateLibro")]
-        public async Task<IActionResult> Post([FromBody] LibroSaveDto LibroSaveDto)
+        public async Task<IActionResult> Create([FromBody] LibroSaveDto LibroSaveDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var result = await _LibroService.Save(LibroSaveDto);
@@ -91,13 +107,20 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el libro.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al crear el libro."
+                });
             }
         }
 
         [HttpPost("ModifyLibro")]
-        public async Task<IActionResult> Post([FromBody] LibroUpdateDto LibroUpdateDto)
+        public async Task<IActionResult> Modify([FromBody] LibroUpdateDto LibroUpdateDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var result = await _LibroService.Update(LibroUpdateDto);
@@ -110,12 +133,16 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al modificar el libro con id {LibroUpdateDto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al modificar el libro."
+                });
             }
         }
 
         [HttpPost("DisabledLibro")]
-        public async Task<IActionResult> Post([FromBody] LibroRemoveDto LibroRemoveDto)
+        public async Task<IActionResult> Disable([FromBody] LibroRemoveDto LibroRemoveDto)
         {
             try
             {
@@ -129,7 +156,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al deshabilitar el libro con id {LibroRemoveDto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al deshabilitar el libro."
+                });
             }
         }
     }

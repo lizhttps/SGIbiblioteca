@@ -69,23 +69,24 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                // Asignación de datos auditables y estado por defecto para el nuevo libro
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 librocreate.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 librocreate.FechaMod = DateTime.Now;
-                librocreate.Estado = "true"; // Estado activo por defecto al crear
+                librocreate.Estado = "true";
 
-                var success = await _libroApiService.CreateLibro(librocreate);
-                if (success)
+                var response = await _libroApiService.CreateLibro(librocreate);
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo crear el libro.");
                 return View(librocreate);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el libro.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al crear el libro.");
                 return View(librocreate);
             }
         }
@@ -119,23 +120,23 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                // Asignar el ID del usuario logueado que realiza la modificación
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 model.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 model.FechaMod = DateTime.Now;
 
-                var success = await _libroApiService.ModifyLibro(model);
-                if (success)
+                var response = await _libroApiService.ModifyLibro(model);
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
-                _loggerService.LogWarning($"No se pudo actualizar el libro con id {model.Id}.");
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo actualizar el libro.");
                 return View(model);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al editar el libro.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al editar el libro.");
                 return View(model);
             }
         }
@@ -168,16 +169,17 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                var success = await _libroApiService.DisabledLibro(id);
-                if (!success)
+                var response = await _libroApiService.DisabledLibro(id);
+                if (response == null || !response.Success)
                 {
-                    _loggerService.LogWarning($"No se pudo eliminar el libro con id {id}.");
+                    TempData["Error"] = response?.Message ?? "No se pudo eliminar el libro.";
                 }
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al eliminar el libro.");
+                TempData["Error"] = "Ocurrió un error inesperado al eliminar el libro.";
                 return RedirectToAction(nameof(Index));
             }
         }

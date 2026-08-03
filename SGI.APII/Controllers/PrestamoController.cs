@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Prestamo;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 
@@ -34,7 +35,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de préstamos.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener los préstamos."
+                });
             }
         }
 
@@ -53,7 +58,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar el préstamo con id {prestamoId}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar el préstamo."
+                });
             }
         }
 
@@ -72,7 +81,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar préstamos vencidos del usuario {usuarioId}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar préstamos vencidos del usuario."
+                });
             }
         }
 
@@ -94,7 +107,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el préstamo.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al crear el préstamo."
+                });
             }
         }
 
@@ -116,7 +133,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al modificar el préstamo con id {dto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al modificar el préstamo."
+                });
             }
         }
 
@@ -135,7 +156,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al deshabilitar el préstamo con id {dto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al deshabilitar el préstamo."
+                });
             }
         }
     }

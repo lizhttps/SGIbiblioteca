@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Auditoria;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 
@@ -34,7 +35,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de auditorías.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener las auditorías."
+                });
             }
         }
 
@@ -53,7 +58,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar la auditoría con id {id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar la auditoría."
+                });
             }
         }
 
@@ -72,7 +81,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar auditoría para la entidad {entidad}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar auditoría por entidad."
+                });
             }
         }
 
@@ -94,7 +107,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el registro de auditoría.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al crear el registro de auditoría."
+                });
             }
         }
     }

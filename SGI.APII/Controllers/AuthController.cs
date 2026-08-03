@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Auth;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 namespace SGI.APII.Controllers
@@ -22,9 +23,7 @@ namespace SGI.APII.Controllers
         public async Task<IActionResult> Login([FromBody] UsuarioLoginDto dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState); // Sirve para verificar que los datos que el usuario envió desde la pantalla cumplan con las reglas de los DTOs antes de gastar recursos procesando la solicitud
-
-
+                return BadRequest(ModelState);
 
             try
             {
@@ -38,7 +37,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error inesperado al intentar iniciar sesión con el correo: {dto.Correo}");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al iniciar sesión."
+                });
             }
         }
 
@@ -60,7 +63,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error inesperado al registrar el usuario con correo: {dto.Correo}");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al registrar el usuario."
+                });
             }
         }
     }

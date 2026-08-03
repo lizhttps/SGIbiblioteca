@@ -7,8 +7,8 @@ namespace SGI.WEB.Services
     {
         Task<ApiResponse<List<LibroEditModel>>> GetLibros();
         Task<ApiResponse<LibroEditModel>> GetLibroById(int id);
-        Task<bool> CreateLibro(LibroCreateModel model);
-        Task<bool> ModifyLibro(LibroEditModel model);
-        Task<bool> DisabledLibro(int id);
+        Task<ApiResponse<object>> CreateLibro(LibroCreateModel model);
+        Task<ApiResponse<object>> ModifyLibro(LibroEditModel model);
+        Task<ApiResponse<object>> DisabledLibro(int id);
     }
 }

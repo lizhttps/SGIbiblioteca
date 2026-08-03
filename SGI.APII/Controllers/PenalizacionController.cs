@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Penalizacion;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 
@@ -34,7 +35,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de penalizaciones.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener las penalizaciones."
+                });
             }
         }
 
@@ -53,7 +58,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar la penalización con id {penaId}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar la penalización."
+                });
             }
         }
 
@@ -72,7 +81,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar penalizaciones vencidas del usuario {usuarioId}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar penalizaciones vencidas del usuario."
+                });
             }
         }
 
@@ -91,7 +104,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar penalizaciones activas del usuario {usuarioId}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar penalizaciones activas del usuario."
+                });
             }
         }
 
@@ -113,7 +130,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear la penalización.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al crear la penalización."
+                });
             }
         }
 
@@ -135,7 +156,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al modificar la penalización con id {dto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al modificar la penalización."
+                });
             }
         }
 
@@ -154,7 +179,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al deshabilitar la penalización con id {dto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al deshabilitar la penalización."
+                });
             }
         }
     }

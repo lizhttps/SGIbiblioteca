@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SGI.Application.Dtos.Notificacion;
 using SGI.Application.Interfaces;
+using SGIbiblioteca.Domain.Base;
 using SGIbiblioteca.Domain.Interfaces;
 
 
@@ -34,7 +35,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al obtener la lista de notificaciones.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener las notificaciones."
+                });
             }
         }
 
@@ -53,7 +58,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al obtener notificaciones del usuario {noti}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al obtener las notificaciones del usuario."
+                });
             }
         }
 
@@ -72,13 +81,20 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al buscar la notificación con id {id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al buscar la notificación."
+                });
             }
         }
 
         [HttpPost("CreateNoficacion")]
-        public async Task<IActionResult> Post([FromBody] NotificacionSaveDto NotificacionSaveDto)
+        public async Task<IActionResult> Create([FromBody] NotificacionSaveDto NotificacionSaveDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var result = await _NotificacionService.Save(NotificacionSaveDto);
@@ -91,13 +107,20 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear la notificación.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al crear la notificación."
+                });
             }
         }
 
         [HttpPost("ModifyNotificacion")]
-        public async Task<IActionResult> Put([FromBody] NotificacionUpdateDto NotificacionUpdateDto)
+        public async Task<IActionResult> Modify([FromBody] NotificacionUpdateDto NotificacionUpdateDto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             try
             {
                 var result = await _NotificacionService.Update(NotificacionUpdateDto);
@@ -110,12 +133,16 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al modificar la notificación con id {NotificacionUpdateDto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al modificar la notificación."
+                });
             }
         }
 
         [HttpPost("DisabledNotificacion")]
-        public async Task<IActionResult> Put([FromBody] NotificacionRemoveDto NotificacionRemoveDto)
+        public async Task<IActionResult> Disable([FromBody] NotificacionRemoveDto NotificacionRemoveDto)
         {
             try
             {
@@ -129,7 +156,11 @@ namespace SGI.APII.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, $"Error al deshabilitar la notificación con id {NotificacionRemoveDto.Id}.");
-                return StatusCode(500, "Ocurrió un error inesperado.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al deshabilitar la notificación."
+                });
             }
         }
     }

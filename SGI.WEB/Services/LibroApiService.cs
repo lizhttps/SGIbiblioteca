@@ -40,30 +40,71 @@ namespace SGI.WEB.Services
             var result = await _httpClient.GetAsync($"Libro/GetLibroByID?id={id}");
             if (!result.IsSuccessStatusCode)
             {
-                return null;
+                return new ApiResponse<LibroEditModel>
+                {
+                    Success = false,
+                    Message = "Error al obtener el libro.",
+                    Data = default
+                };
             }
 
             var responseString = await result.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ApiResponse<LibroEditModel>>(responseString, _jsonOptions);
         }
 
-        public async Task<bool> CreateLibro(LibroCreateModel model)
+        public async Task<ApiResponse<object>> CreateLibro(LibroCreateModel model)
         {
             var result = await _httpClient.PostAsJsonAsync("Libro/CreateLibro", model);
-            return result.IsSuccessStatusCode;
+            var responseString = await result.Content.ReadAsStringAsync();
+
+            if (!result.IsSuccessStatusCode)
+            {
+                var errorResponse = JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
+                return errorResponse ?? new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error al crear el libro."
+                };
+            }
+
+            return JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
         }
 
-        public async Task<bool> ModifyLibro(LibroEditModel model)
+        public async Task<ApiResponse<object>> ModifyLibro(LibroEditModel model)
         {
             var result = await _httpClient.PostAsJsonAsync("Libro/ModifyLibro", model);
-            return result.IsSuccessStatusCode;
+            var responseString = await result.Content.ReadAsStringAsync();
+
+            if (!result.IsSuccessStatusCode)
+            {
+                var errorResponse = JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
+                return errorResponse ?? new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error al modificar el libro."
+                };
+            }
+
+            return JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
         }
 
-        public async Task<bool> DisabledLibro(int id)
+        public async Task<ApiResponse<object>> DisabledLibro(int id)
         {
             var removeDto = new LibroRemoveDto { Id = id, Estado = false };
             var result = await _httpClient.PostAsJsonAsync("Libro/DisabledLibro", removeDto);
-            return result.IsSuccessStatusCode;
+            var responseString = await result.Content.ReadAsStringAsync();
+
+            if (!result.IsSuccessStatusCode)
+            {
+                var errorResponse = JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
+                return errorResponse ?? new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = "Error al deshabilitar el libro."
+                };
+            }
+
+            return JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
         }
     }
 }
