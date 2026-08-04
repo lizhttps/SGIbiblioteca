@@ -1,8 +1,8 @@
 ﻿using SGI.Application.Dtos.Auth;
 using SGI.Application.Dtos.Usuarios;
-using SGI.WEB.Models; 
+using SGI.WEB.Models;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Auth
 {
     public interface IAuthApiService
     {

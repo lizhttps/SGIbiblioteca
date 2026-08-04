@@ -1,0 +1,39 @@
+﻿@model SGI.WEB.Models.ApiResponse<List<SGI.WEB.Models.Notificacion.NotificacionEditModel>>
+
+@{
+    ViewData["Title"] = "Mis Notificaciones";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Mis Notificaciones</h2>
+    @if (User.IsInRole("Bibliotecario"))
+    {
+        <a asp-action="Create" class="btn btn-primary">+ Nueva Notificación</a>
+    }
+</div>
+
+@if (Model == null || !Model.Success || Model.Data == null || !Model.Data.Any())
+{
+    <p>No tienes notificaciones.</p>
+}
+else
+{
+    <div class="list-group">
+        @foreach (var noti in Model.Data.OrderByDescending(n => n.FechaMod))
+        {
+            <div class="list-group-item d-flex justify-content-between align-items-start @(noti.Leido ? "" : "list-group-item-light border-primary")">
+                <div>
+                    <p class="mb-1">@noti.Mensaje</p>
+                    <small class="text-muted">@noti.FechaMod.ToString("dd/MM/yyyy HH:mm")</small>
+                </div>
+                @if (!noti.Leido)
+                {
+                    <form asp-action="MarcarLeida" asp-route-id="@noti.Id" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-sm btn-outline-primary">Marcar como leída</button>
+                    </form>
+                }
+            </div>
+        }
+    </div>
+}

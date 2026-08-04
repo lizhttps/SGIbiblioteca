@@ -3,7 +3,7 @@ using SGI.WEB.Models;
 using SGI.WEB.Models.Devolucion;
 using System.Text.Json;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Devolucion
 {
     public class DevolucionApiService : IDevolucionApiService
     {

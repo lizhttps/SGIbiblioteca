@@ -2,7 +2,7 @@
 using SGI.Application.Dtos.Usuarios;
 using SGI.WEB.Models;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Auth
 {
     public class AuthApiService : IAuthApiService
     {

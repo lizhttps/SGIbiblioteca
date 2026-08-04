@@ -1,7 +1,7 @@
 ﻿using SGI.WEB.Models;
 using SGI.WEB.Models.Libro;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Libro
 {
     public interface ILibroApiService
     {

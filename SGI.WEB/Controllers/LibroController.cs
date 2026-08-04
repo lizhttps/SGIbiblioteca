@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Libro;
-using SGI.WEB.Services;
+using SGI.WEB.Services.Libro;
 
 namespace SGI.WEB.Controllers
 {

@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Prestamo;
-using SGI.WEB.Services;
 using System.Security.Claims;
+using SGI.WEB.Services.Prestamo;
 
 namespace SGI.WEB.Controllers
 {
@@ -78,17 +78,20 @@ namespace SGI.WEB.Controllers
                 prestamocreate.UsuarioMod = userId;
                 prestamocreate.FechaMod = DateTime.Now;
 
-                var success = await _prestamoApiService.CreatePrestamo(prestamocreate);
-                if (success)
+                var response = await _prestamoApiService.CreatePrestamo(prestamocreate);
+
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo crear el préstamo.");
                 return View(prestamocreate);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el préstamo.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al crear el préstamo.");
                 return View(prestamocreate);
             }
         }
@@ -125,18 +128,21 @@ namespace SGI.WEB.Controllers
                 model.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 model.FechaMod = DateTime.Now;
 
-                var success = await _prestamoApiService.ModifyPrestamo(model);
-                if (success)
+                var response = await _prestamoApiService.ModifyPrestamo(model);
+
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
                 _loggerService.LogWarning($"No se pudo actualizar el préstamo con id {model.Id}.");
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo actualizar el préstamo.");
                 return View(model);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al editar el préstamo.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al editar el préstamo.");
                 return View(model);
             }
         }
@@ -169,16 +175,20 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                var success = await _prestamoApiService.DisabledPrestamo(id);
-                if (!success)
+                var response = await _prestamoApiService.DisabledPrestamo(id);
+
+                if (response == null || !response.Success)
                 {
                     _loggerService.LogWarning($"No se pudo eliminar el préstamo con id {id}.");
+                    TempData["Error"] = response?.Message ?? "No se pudo eliminar el préstamo.";
                 }
+
                 return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al eliminar el préstamo.");
+                TempData["Error"] = "Ocurrió un error inesperado al eliminar el préstamo.";
                 return RedirectToAction(nameof(Index));
             }
         }

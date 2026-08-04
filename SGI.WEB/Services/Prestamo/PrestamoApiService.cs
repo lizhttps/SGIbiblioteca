@@ -3,7 +3,7 @@ using SGI.WEB.Models;
 using SGI.WEB.Models.Prestamo;
 using System.Text.Json;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Prestamo
 {
     public class PrestamoApiService : IPrestamoApiService
     {
@@ -30,7 +30,6 @@ namespace SGI.WEB.Services
                     Data = null
                 };
             }
-
             var responseString = await result.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ApiResponse<List<PrestamoEditModel>>>(responseString, _jsonOptions);
         }
@@ -42,28 +41,64 @@ namespace SGI.WEB.Services
             {
                 return null;
             }
-
             var responseString = await result.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ApiResponse<PrestamoEditModel>>(responseString, _jsonOptions);
         }
 
-        public async Task<bool> CreatePrestamo(PrestamoCreateModel model)
+        public async Task<ApiResponse<object>> CreatePrestamo(PrestamoCreateModel model)
         {
             var result = await _httpClient.PostAsJsonAsync("Prestamo/CreatePrestamo", model);
-            return result.IsSuccessStatusCode;
+            return await ReadApiResponse(result, "Error al crear el préstamo.");
         }
 
-        public async Task<bool> ModifyPrestamo(PrestamoEditModel model)
+        public async Task<ApiResponse<object>> ModifyPrestamo(PrestamoEditModel model)
         {
             var result = await _httpClient.PostAsJsonAsync("Prestamo/ModifyPrestamo", model);
-            return result.IsSuccessStatusCode;
+            return await ReadApiResponse(result, "Error al modificar el préstamo.");
         }
 
-        public async Task<bool> DisabledPrestamo(int id)
+        public async Task<ApiResponse<object>> DisabledPrestamo(int id)
         {
             var removeDto = new PrestamoRemoveDto { Id = id, Estado = false };
             var result = await _httpClient.PostAsJsonAsync("Prestamo/DisabledPrestamo", removeDto);
-            return result.IsSuccessStatusCode;
+            return await ReadApiResponse(result, "Error al eliminar el préstamo.");
+        }
+
+        // Helper: siempre intenta leer el cuerpo (aunque el status no sea 2xx),
+        // porque la API devuelve OperationResult con el Message incluso en 400/409/500.
+        private static async Task<ApiResponse<object>> ReadApiResponse(HttpResponseMessage result, string fallbackMessage)
+        {
+            var responseString = await result.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(responseString))
+            {
+                return new ApiResponse<object>
+                {
+                    Success = result.IsSuccessStatusCode,
+                    Message = result.IsSuccessStatusCode ? null : fallbackMessage,
+                    Data = null
+                };
+            }
+
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<ApiResponse<object>>(responseString, _jsonOptions);
+                return parsed ?? new ApiResponse<object>
+                {
+                    Success = result.IsSuccessStatusCode,
+                    Message = fallbackMessage,
+                    Data = null
+                };
+            }
+            catch (JsonException)
+            {
+                return new ApiResponse<object>
+                {
+                    Success = false,
+                    Message = fallbackMessage,
+                    Data = null
+                };
+            }
         }
     }
 }

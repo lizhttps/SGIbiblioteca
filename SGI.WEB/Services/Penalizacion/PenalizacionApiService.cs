@@ -2,7 +2,7 @@
 using SGI.WEB.Models.Penalizacion;
 using System.Text.Json;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Penalizacion
 {
     public class PenalizacionApiService : IPenalizacionApiService
     {
@@ -60,7 +60,7 @@ namespace SGI.WEB.Services
 
         public async Task<bool> DisabledPenalizacion(int id)
         {
-            var result = await _httpClient.PostAsJsonAsync("Penalizacion/DisabledPenalizacion", new { id = id, estado = false });
+            var result = await _httpClient.PostAsJsonAsync("Penalizacion/DisabledPenalizacion", new { id, estado = false });
             return result.IsSuccessStatusCode;
         }
     }

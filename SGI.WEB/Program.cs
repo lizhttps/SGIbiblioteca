@@ -1,7 +1,13 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.Application.Services;
-using SGI.WEB.Services;
+using SGI.WEB.Services.Auth;
+using SGI.WEB.Services.Devolucion;
+using SGI.WEB.Services.Libro;
+using SGI.WEB.Services.Notificacion;
+using SGI.WEB.Services.Penalizacion;
+using SGI.WEB.Services.Prestamo;
+using SGI.WEB.Services.Usuario;
 
 namespace SGI.WEB
 {
@@ -37,6 +43,12 @@ namespace SGI.WEB
             {
                 client.BaseAddress = new Uri("https://localhost:7289/api/");
             });
+
+            builder.Services.AddHttpClient<INotificacionApiService, NotificacionApiService>(client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:7289/api/"); 
+            });
+
 
             builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options =>

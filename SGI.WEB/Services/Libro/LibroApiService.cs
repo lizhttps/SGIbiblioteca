@@ -3,7 +3,7 @@ using SGI.WEB.Models;
 using SGI.WEB.Models.Libro;
 using System.Text.Json;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Libro
 {
     public class LibroApiService : ILibroApiService
     {

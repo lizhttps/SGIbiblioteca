@@ -1,7 +1,7 @@
 ﻿using SGI.WEB.Models;
 using SGI.WEB.Models.Penalizacion;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Penalizacion
 {
     public interface IPenalizacionApiService
     {

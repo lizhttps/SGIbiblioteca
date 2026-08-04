@@ -1,14 +1,14 @@
 ﻿using SGI.WEB.Models;
 using SGI.WEB.Models.Usuario;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Usuario
 {
     public interface IUsuarioApiService
     {
         Task<ApiResponse<List<UsuarioEditModel>>> GetUsuarios();
         Task<ApiResponse<UsuarioEditModel>> GetUsuarioById(int id);
-        Task<bool> CreateUsuario(UsuarioCreateModel model);
-        Task<bool> ModifyUsuario(UsuarioEditModel model);
-        Task<bool> DisabledUsuario(int id);
+        Task<ApiResponse<object>> CreateUsuario(UsuarioCreateModel model);
+        Task<ApiResponse<object>> ModifyUsuario(UsuarioEditModel model);
+        Task<ApiResponse<object>> DisabledUsuario(int id);
     }
 }

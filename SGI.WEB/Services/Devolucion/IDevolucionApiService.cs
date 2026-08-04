@@ -1,7 +1,7 @@
 ﻿using SGI.WEB.Models;
 using SGI.WEB.Models.Devolucion;
 
-namespace SGI.WEB.Services
+namespace SGI.WEB.Services.Devolucion
 {
     public interface IDevolucionApiService
     {
