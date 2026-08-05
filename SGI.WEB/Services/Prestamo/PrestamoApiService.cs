@@ -100,5 +100,21 @@ namespace SGI.WEB.Services.Prestamo
                 };
             }
         }
+
+        public async Task<ApiResponse<List<PrestamoEditModel>>> GetPrestamosByUsuario(int usuarioId)
+        {
+            var result = await _httpClient.GetAsync($"Prestamo/GetPrestamosByUsuario?usuarioId={usuarioId}");
+            if (!result.IsSuccessStatusCode)
+            {
+                return new ApiResponse<List<PrestamoEditModel>>
+                {
+                    Success = false,
+                    Message = "Error al obtener los préstamos del usuario.",
+                    Data = null
+                };
+            }
+            var responseString = await result.Content.ReadAsStringAsync();
+            return JsonSerializer.Deserialize<ApiResponse<List<PrestamoEditModel>>>(responseString, _jsonOptions);
+        }
     }
 }

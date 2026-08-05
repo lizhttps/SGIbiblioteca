@@ -1,9 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SGIbiblioteca.Domain.Interfaces;
+using SGI.WEB.Models;
 using SGI.WEB.Models.Prestamo;
-using System.Security.Claims;
 using SGI.WEB.Services.Prestamo;
+using SGIbiblioteca.Domain.Interfaces;
+using System.Security.Claims;
 
 namespace SGI.WEB.Controllers
 {
@@ -24,6 +25,17 @@ namespace SGI.WEB.Controllers
             try
             {
                 var prestamoResponse = await _prestamoApiService.GetPrestamos();
+
+                if (prestamoResponse != null && prestamoResponse.Success && !User.IsInRole("Bibliotecario"))
+                {
+                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                    var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+
+                    prestamoResponse.Data = prestamoResponse.Data
+                        .Where(p => p.UsuarioId == userId)
+                        .ToList();
+                }
+
                 return View(prestamoResponse);
             }
             catch (Exception ex)
@@ -40,6 +52,17 @@ namespace SGI.WEB.Controllers
                 var singleResponse = await _prestamoApiService.GetPrestamoById(id);
                 if (singleResponse != null && singleResponse.Success && singleResponse.Data != null)
                 {
+                    if (!User.IsInRole("Bibliotecario"))
+                    {
+                        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                        var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+
+                        if (singleResponse.Data.UsuarioId != userId) 
+                        {
+                            return Forbid();
+                        }
+                    }
+
                     return View(singleResponse.Data);
                 }
 
