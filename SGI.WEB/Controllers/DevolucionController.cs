@@ -19,6 +19,7 @@ namespace SGI.WEB.Controllers
             _loggerService = loggerService;
         }
 
+        // GET: Devolucion
         public async Task<IActionResult> Index()
         {
             try
@@ -33,6 +34,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
+        // GET: Devolucion/Details/5
         public async Task<IActionResult> Details(int id)
         {
             try
@@ -54,18 +56,44 @@ namespace SGI.WEB.Controllers
         }
 
         // GET: Devolucion/Create
-        public ActionResult Create()
+        public async Task<IActionResult> Create(int? prestamoId, string returnUrl)
         {
-            return View();
+            var model = new DevolucionCreateModel();
+
+            if (prestamoId.HasValue)
+            {
+                model.PrestamoId = prestamoId.Value;
+
+                // Validación para evitar abrir la vista si ya existe devolución
+                if (await YaFueDevuelto(prestamoId.Value))
+                {
+                    TempData["Error"] = "Este préstamo ya fue marcado como devuelto anteriormente.";
+                    return Redirect(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                        ? returnUrl
+                        : Url.Action(nameof(Index)));
+                }
+            }
+
+            ViewBag.ReturnUrl = returnUrl;
+            return View(model);
         }
 
         // POST: Devolucion/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(DevolucionCreateModel devolucioncreate)
+        public async Task<IActionResult> Create(DevolucionCreateModel devolucioncreate, string returnUrl)
         {
             try
             {
+                // Validación para evitar procesar devoluciones duplicadas
+                if (await YaFueDevuelto(devolucioncreate.PrestamoId))
+                {
+                    TempData["Error"] = "Este préstamo ya fue marcado como devuelto anteriormente.";
+                    return Redirect(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)
+                        ? returnUrl
+                        : Url.Action(nameof(Index)));
+                }
+
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                 devolucioncreate.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
                 devolucioncreate.FechaMod = DateTime.Now;
@@ -73,18 +101,25 @@ namespace SGI.WEB.Controllers
                 var success = await _devolucionApiService.CreateDevolucion(devolucioncreate);
                 if (success)
                 {
+                    if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                    {
+                        return Redirect(returnUrl);
+                    }
                     return RedirectToAction(nameof(Index));
                 }
 
+                ViewBag.ReturnUrl = returnUrl;
                 return View(devolucioncreate);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al registrar la devolución.");
+                ViewBag.ReturnUrl = returnUrl;
                 return View(devolucioncreate);
             }
         }
 
+        // GET: Devolucion/Edit/5
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -132,6 +167,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
+        // GET: Devolucion/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
             try
@@ -152,6 +188,7 @@ namespace SGI.WEB.Controllers
             }
         }
 
+        // POST: Devolucion/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
@@ -169,6 +206,23 @@ namespace SGI.WEB.Controllers
             {
                 _loggerService.LogError(ex, "Error al eliminar la devolución.");
                 return RedirectToAction(nameof(Index));
+            }
+        }
+        // Helper: revisa si ya existe una devolución para ese préstamo
+        private async Task<bool> YaFueDevuelto(int prestamoId)
+        {
+            try
+            {
+                var devolucionesResponse = await _devolucionApiService.GetDevoluciones();
+                return devolucionesResponse?.Success == true
+                    && devolucionesResponse.Data != null
+                    && devolucionesResponse.Data.Any(d => d.PrestamoId == prestamoId);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al verificar devoluciones previas del préstamo {prestamoId}.");
+                // Si falla la verificación, mejor bloquear por seguridad que dejar pasar un duplicado
+                return true;
             }
         }
     }

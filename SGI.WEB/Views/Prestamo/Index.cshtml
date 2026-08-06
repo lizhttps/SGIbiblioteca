@@ -187,6 +187,36 @@
                                             </div>
                                         }
 
+                                        @* Botones Devuelto/Penalizar para préstamos activos *@
+                                        @if (esBibliotecario && (item.EstadoPrestamo == "Activo" || item.EstadoPrestamo == "Aprobado"))
+                                        {
+                                            <div class="d-inline-flex align-items-center gap-2 me-2">
+                                                <!-- MARCAR DEVUELTO -->
+                                                <form asp-action="MarcarDevuelto" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
+                                                            title="Marcar como devuelto"
+                                                            onclick="return confirm('¿Confirmas que el libro fue devuelto?');">
+                                                        <i class="bi bi-box-arrow-in-down me-1"></i>Devuelto
+                                                    </button>
+                                                </form>
+
+                                                <!-- PENALIZAR -->
+                                                <form asp-action="Penalizar" asp-route-id="@item.Id" method="post" class="d-inline-flex align-items-center gap-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="text" name="motivo" class="form-control form-control-sm rounded-3" style="width: 140px;"
+                                                           value="Devolución tardía" title="Motivo de la penalización" required />
+                                                    <input type="number" name="monto" class="form-control form-control-sm rounded-3" style="width: 80px;"
+                                                           value="50" step="0.01" min="0" title="Monto de la penalización" required />
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                            title="Aplicar penalización"
+                                                            onclick="return confirm('¿Aplicar penalización a este usuario?');">
+                                                        <i class="bi bi-exclamation-octagon me-1"></i>Penalizar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+
                                         @* Botones estándar (Ver Detalles, Editar, Eliminar) *@
                                         <div class="btn-group shadow-sm rounded-pill" role="group">
                                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Ver Detalles">

@@ -11,5 +11,6 @@ namespace SGI.WEB.Models.Penalizacion
         public bool Pagada { get; set; }
         public DateTime FechaMod { get; set; } = DateTime.Now;
         public int UsuarioMod { get; set; }
+
     }
 }

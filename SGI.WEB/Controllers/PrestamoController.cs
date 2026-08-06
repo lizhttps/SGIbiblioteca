@@ -45,13 +45,19 @@ namespace SGI.WEB.Controllers
             {
                 var prestamoResponse = await _prestamoApiService.GetPrestamos();
 
-                if (prestamoResponse != null && prestamoResponse.Success && !User.IsInRole("Bibliotecario"))
+                if (prestamoResponse != null && prestamoResponse.Success)
                 {
-                    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                    var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+                    if (!User.IsInRole("Bibliotecario"))
+                    {
+                        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                        var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
 
+                        prestamoResponse.Data = prestamoResponse.Data
+                            .Where(p => p.UsuarioId == userId)
+                            .ToList();
+                    }
                     prestamoResponse.Data = prestamoResponse.Data
-                        .Where(p => p.UsuarioId == userId)
+                        .Where(p => !string.Equals(p.EstadoPrestamo, "Devuelto", StringComparison.OrdinalIgnoreCase))
                         .ToList();
                 }
 

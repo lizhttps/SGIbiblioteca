@@ -6,7 +6,6 @@ using SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos;
 using SGIbiblioteca.Domain.Repositorio;
 using SGIbiblioteca.Domain.Interfaces;
 
-
 namespace SGI.Application.Service
 {
     public class PrestamoService : IPrestamoService
@@ -111,8 +110,9 @@ namespace SGI.Application.Service
                     return result;
                 }
 
+                // CORRECCIÓN: Verifica solo penalizaciones ACTIVAS (Estado == true) y NO PAGADAS (!Pagada)
                 var penalizaciones = await _penalizacionRepository.GetByUsuarioIdAsync(dto.UsuarioId);
-                if (penalizaciones != null && penalizaciones.Any(p => p.Pagada == false))
+                if (penalizaciones != null && penalizaciones.Any(p => p.Estado && !p.Pagada))
                 {
                     result.Success = false;
                     result.Message = "El usuario tiene penalizaciones pendientes de pago";
@@ -156,7 +156,6 @@ namespace SGI.Application.Service
             }
             return result;
         }
-
 
         public async Task<OperationResult> Update(PrestamoUpdateDto dto)
         {
@@ -274,6 +273,7 @@ namespace SGI.Application.Service
             }
             return result;
         }
+
         public async Task<OperationResult> AprobarPrestamo(PrestamoDecisionDto dto)
         {
             OperationResult result = new OperationResult();
