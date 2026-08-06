@@ -134,5 +134,12 @@ namespace SGI.WEB.Services.Prestamo
             var result = await _httpClient.PostAsJsonAsync("Prestamo/RechazarPrestamo", decisionDto);
             return await ReadApiResponse(result, "Error al rechazar el préstamo.");
         }
+
+        public async Task<ApiResponse<object>> MarcarDevuelto(int id, int usuarioMod)
+        {
+            var decisionDto = new PrestamoDecisionDto { Id = id, UsuarioMod = usuarioMod };
+            var result = await _httpClient.PostAsJsonAsync("Prestamo/MarcarDevuelto", decisionDto);
+            return await ReadApiResponse(result, "Error al marcar el préstamo como devuelto.");
+        }
     }
 }

@@ -208,5 +208,28 @@ namespace SGI.APII.Controllers
                 });
             }
         }
+
+        [HttpPost("MarcarDevuelto")]
+        public async Task<IActionResult> MarcarDevuelto([FromBody] PrestamoDecisionDto dto)
+        {
+            try
+            {
+                var result = await _prestamoService.MarcarDevuelto(dto);
+                if (result.Success)
+                    return Ok(result);
+
+                _loggerService.LogWarning($"No se pudo marcar como devuelto el préstamo con id {dto.Id}.");
+                return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al marcar como devuelto el préstamo con id {dto.Id}.");
+                return StatusCode(500, new OperationResult
+                {
+                    Success = false,
+                    Message = "Ocurrió un error inesperado al marcar el préstamo como devuelto."
+                });
+            }
+        }
     }
 }

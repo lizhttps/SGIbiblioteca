@@ -373,5 +373,53 @@ namespace SGI.Application.Service
             }
             return result;
         }
+        public async Task<OperationResult> MarcarDevuelto(PrestamoDecisionDto dto)
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var prestamo = await _prestamoRepository.GetEntityByIdAsync(dto.Id);
+                if (prestamo == null)
+                {
+                    result.Success = false;
+                    result.Message = "Préstamo no encontrado.";
+                    return result;
+                }
+
+                if (prestamo.EstadoPrestamo != "Aprobado" && prestamo.EstadoPrestamo != "Activo")
+                {
+                    result.Success = false;
+                    result.Message = "Solo se pueden marcar como devueltos préstamos Activos o Aprobados.";
+                    return result;
+                }
+
+                prestamo.EstadoPrestamo = "Devuelto";
+                prestamo.FechaModificacion = DateTime.Now;
+                prestamo.ModificadoPor = dto.UsuarioMod.ToString();
+
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al marcar el préstamo como devuelto.";
+                    return result;
+                }
+
+                // Devolvemos la copia al inventario disponible
+                var libro = await _libroRepository.GetEntityByIdAsync(prestamo.LibroId);
+                if (libro != null)
+                {
+                    libro.CantidadDisponible += 1;
+                    await _libroRepository.UpdateEntityAsync(libro);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error al marcar el préstamo como devuelto.";
+                _logger.LogError(ex, result.Message);
+            }
+            return result;
+        }
     }
 }

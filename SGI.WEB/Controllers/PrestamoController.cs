@@ -13,7 +13,6 @@ using SGI.WEB.Services.Usuario;
 using SGIbiblioteca.Domain.Interfaces;
 using System.Security.Claims;
 
-
 namespace SGI.WEB.Controllers
 {
     [Authorize]
@@ -82,7 +81,7 @@ namespace SGI.WEB.Controllers
                         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
                         var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
 
-                        if (singleResponse.Data.UsuarioId != userId) 
+                        if (singleResponse.Data.UsuarioId != userId)
                         {
                             return Forbid();
                         }
@@ -241,7 +240,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-
         // POST: Prestamo/ConfirmarSolicitud
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -341,10 +339,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-
-
-
-
         [HttpGet]
         public async Task<IActionResult> Solicitar(int libroId)
         {
@@ -368,7 +362,6 @@ namespace SGI.WEB.Controllers
                 return RedirectToAction("Index", "Libro");
             }
         }
-
 
         [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
@@ -426,8 +419,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-
-
         [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -441,12 +432,12 @@ namespace SGI.WEB.Controllers
                 // Obtener datos del préstamo ANTES de rechazar
                 var prestamoResponse = await _prestamoApiService.GetPrestamoById(id);
 
-                //  Rechazar el préstamo
+                // Rechazar el préstamo
                 var response = await _prestamoApiService.RechazarPrestamo(id, userId);
 
                 if (response != null && response.Success)
                 {
-                    //  Enviar notificación al estudiante
+                    // Enviar notificación al estudiante
                     if (prestamoResponse?.Success == true && prestamoResponse.Data != null)
                     {
                         var prestamo = prestamoResponse.Data;
@@ -476,6 +467,56 @@ namespace SGI.WEB.Controllers
             {
                 _loggerService.LogError(ex, $"Error al rechazar el préstamo con id {id}.");
                 TempData["Error"] = "Ocurrió un error inesperado al rechazar el préstamo.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+
+
+        [Authorize(Roles = "Bibliotecario")]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> MarcarDevuelto(int id)
+        {
+            try
+            {
+                var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+                var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+
+                // Traemos los datos del préstamo ANTES de marcarlo devuelto, para notificar
+                var prestamoResponse = await _prestamoApiService.GetPrestamoById(id);
+
+                var response = await _prestamoApiService.MarcarDevuelto(id, userId);
+
+                if (response != null && response.Success)
+                {
+                    if (prestamoResponse?.Success == true && prestamoResponse.Data != null)
+                    {
+                        var prestamo = prestamoResponse.Data;
+                        var notificacion = new NotificacionCreateModel
+                        {
+                            UsuarioId = prestamo.UsuarioId,
+                            Mensaje = $"✅ Se registró la devolución del libro \"{prestamo.TituloLibro}\". ¡Gracias!",
+                            UsuarioMod = userId,
+                            FechaMod = DateTime.Now
+                        };
+
+                        await _notificacionApiService.CreateNotificacion(notificacion);
+                    }
+
+                    TempData["Success"] = "Préstamo marcado como devuelto correctamente.";
+                }
+                else
+                {
+                    TempData["Error"] = response?.Message ?? "No se pudo marcar el préstamo como devuelto.";
+                }
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                _loggerService.LogError(ex, $"Error al marcar como devuelto el préstamo con id {id}.");
+                TempData["Error"] = "Ocurrió un error inesperado al marcar el préstamo como devuelto.";
                 return RedirectToAction(nameof(Index));
             }
         }

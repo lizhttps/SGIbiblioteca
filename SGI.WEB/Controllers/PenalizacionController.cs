@@ -5,6 +5,7 @@ using SGI.WEB.Models.Notificacion;
 using SGI.WEB.Models.Penalizacion;
 using SGI.WEB.Services.Notificacion;
 using SGI.WEB.Services.Penalizacion;
+using SGI.WEB.Services.Prestamo;
 using SGI.WEB.Services.Usuario;
 using System.Security.Claims;
 
@@ -16,17 +17,20 @@ namespace SGI.WEB.Controllers
         private readonly IPenalizacionApiService _penalizacionApiService;
         private readonly IUsuarioApiService _usuarioApiService;
         private readonly INotificacionApiService _notificacionApiService;
+        private readonly IPrestamoApiService _prestamoApiService;
         private readonly ILoggerService _loggerService;
 
         public PenalizacionController(
             IPenalizacionApiService penalizacionApiService,
             IUsuarioApiService usuarioApiService,
             INotificacionApiService notificacionApiService,
+            IPrestamoApiService prestamoApiService,
             ILoggerService loggerService)
         {
             _penalizacionApiService = penalizacionApiService;
             _usuarioApiService = usuarioApiService;
             _notificacionApiService = notificacionApiService;
+            _prestamoApiService = prestamoApiService;
             _loggerService = loggerService;
         }
 
@@ -111,6 +115,7 @@ namespace SGI.WEB.Controllers
 
                 if (success)
                 {
+                    // 1. Notificación de la penalización al usuario
                     try
                     {
                         var notificacion = new NotificacionCreateModel
@@ -129,6 +134,20 @@ namespace SGI.WEB.Controllers
                         _loggerService.LogError(ex, "Error al notificar al usuario sobre la penalización.");
                     }
 
+                    // 2. Si la penalización viene ligada a un préstamo, márcalo como devuelto
+                    if (prestamoId.HasValue && prestamoId.Value > 0)
+                    {
+                        try
+                        {
+                            await _prestamoApiService.MarcarDevuelto(prestamoId.Value, createModel.UsuarioMod);
+                        }
+                        catch (Exception ex)
+                        {
+                            _loggerService.LogError(ex, $"Error al marcar como devuelto el préstamo {prestamoId} tras penalización.");
+                        }
+                    }
+
+                    // 3. Redirección
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
                         return Redirect(returnUrl);
