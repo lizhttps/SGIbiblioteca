@@ -2,8 +2,12 @@
 using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Devolucion;
+using SGI.WEB.Models.Notificacion; // NUEVO
+using SGI.WEB.Models.Prestamo;
 using System.Security.Claims;
 using SGI.WEB.Services.Devolucion;
+using SGI.WEB.Services.Prestamo;
+using SGI.WEB.Services.Notificacion; // NUEVO
 
 namespace SGI.WEB.Controllers
 {
@@ -11,11 +15,19 @@ namespace SGI.WEB.Controllers
     public class DevolucionController : Controller
     {
         private readonly IDevolucionApiService _devolucionApiService;
+        private readonly IPrestamoApiService _prestamoApiService;
+        private readonly INotificacionApiService _notificacionApiService; // NUEVO
         private readonly ILoggerService _loggerService;
 
-        public DevolucionController(IDevolucionApiService devolucionApiService, ILoggerService loggerService)
+        public DevolucionController(
+            IDevolucionApiService devolucionApiService,
+            IPrestamoApiService prestamoApiService,
+            INotificacionApiService notificacionApiService, // NUEVO
+            ILoggerService loggerService)
         {
             _devolucionApiService = devolucionApiService;
+            _prestamoApiService = prestamoApiService;
+            _notificacionApiService = notificacionApiService; // NUEVO
             _loggerService = loggerService;
         }
 
@@ -72,6 +84,21 @@ namespace SGI.WEB.Controllers
                         ? returnUrl
                         : Url.Action(nameof(Index)));
                 }
+
+                // Carga el nombre de usuario para mostrarlo en la vista si está disponible
+                try
+                {
+                    var prestamoResponse = await _prestamoApiService.GetPrestamoById(prestamoId.Value);
+                    var prestamo = prestamoResponse?.Data;
+                    if (prestamo != null && !string.IsNullOrWhiteSpace(prestamo.NombreUsuario))
+                    {
+                        ViewBag.NombreUsuario = prestamo.NombreUsuario;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _loggerService.LogError(ex, "Error al obtener datos del préstamo para la devolución.");
+                }
             }
 
             ViewBag.ReturnUrl = returnUrl;
@@ -95,12 +122,58 @@ namespace SGI.WEB.Controllers
                 }
 
                 var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-                devolucioncreate.UsuarioMod = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+                var userId = userIdClaim != null ? int.Parse(userIdClaim.Value) : 0;
+                devolucioncreate.UsuarioMod = userId;
                 devolucioncreate.FechaMod = DateTime.Now;
 
                 var success = await _devolucionApiService.CreateDevolucion(devolucioncreate);
                 if (success)
                 {
+                    // Obtenemos el préstamo una sola vez para actualizar estado y notificar
+                    PrestamoEditModel? prestamo = null;
+                    try
+                    {
+                        var prestamoResponse = await _prestamoApiService.GetPrestamoById(devolucioncreate.PrestamoId);
+                        prestamo = prestamoResponse?.Data;
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggerService.LogError(ex, $"Error al obtener el préstamo {devolucioncreate.PrestamoId} para notificación.");
+                    }
+
+                    // Actualizamos el estado del préstamo a "Devuelto"
+                    try
+                    {
+                        await _prestamoApiService.MarcarDevuelto(devolucioncreate.PrestamoId, userId);
+                    }
+                    catch (Exception ex)
+                    {
+                        _loggerService.LogError(ex, $"Error al marcar como devuelto el préstamo {devolucioncreate.PrestamoId} tras registrar devolución.");
+                    }
+
+                    // Notificamos al usuario solicitante sobre la devolución
+                    if (prestamo != null)
+                    {
+                        try
+                        {
+                            var notificacion = new NotificacionCreateModel
+                            {
+                                UsuarioId = prestamo.UsuarioId,
+                                Mensaje = $"✅ Tu devolución del préstamo \"{prestamo.TituloLibro}\" fue registrada correctamente.",
+                                UsuarioMod = userId,
+                                FechaMod = DateTime.Now
+                            };
+
+                            await _notificacionApiService.CreateNotificacion(notificacion);
+                        }
+                        catch (Exception ex)
+                        {
+                            _loggerService.LogError(ex, "Error al notificar al usuario sobre la devolución.");
+                        }
+                    }
+
+                    TempData["Success"] = "Devolución registrada correctamente.";
+
                     if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                     {
                         return Redirect(returnUrl);
@@ -208,6 +281,7 @@ namespace SGI.WEB.Controllers
                 return RedirectToAction(nameof(Index));
             }
         }
+
         // Helper: revisa si ya existe una devolución para ese préstamo
         private async Task<bool> YaFueDevuelto(int prestamoId)
         {

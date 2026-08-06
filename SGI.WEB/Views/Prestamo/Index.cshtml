@@ -191,17 +191,17 @@
                                         @if (esBibliotecario && (item.EstadoPrestamo == "Activo" || item.EstadoPrestamo == "Aprobado"))
                                         {
                                             <div class="d-inline-flex align-items-center gap-2 me-2">
-                                                <!-- MARCAR DEVUELTO -->
-                                                <form asp-action="MarcarDevuelto" asp-route-id="@item.Id" method="post" class="d-inline">
-                                                    @Html.AntiForgeryToken()
-                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3"
-                                                            title="Marcar como devuelto"
-                                                            onclick="return confirm('¿Confirmas que el libro fue devuelto?');">
-                                                        <i class="bi bi-box-arrow-in-down me-1"></i>Devuelto
-                                                    </button>
-                                                </form>
+                                                <!-- DEVUELTO: redirige a Devolucion/Create -->
+                                                <a asp-controller="Devolucion"
+                                                   asp-action="Create"
+                                                   asp-route-prestamoId="@item.Id"
+                                                   asp-route-returnUrl="@Url.Action("Index", "Prestamo")"
+                                                   class="btn btn-sm btn-success rounded-pill px-3"
+                                                   title="Registrar devolución">
+                                                    <i class="bi bi-box-arrow-in-down me-1"></i>Devuelto
+                                                </a>
 
-                                                <!-- PENALIZAR: ahora redirige a Penalizacion/Create -->
+                                                <!-- PENALIZAR: redirige a Penalizacion/Create -->
                                                 <a asp-controller="Penalizacion"
                                                    asp-action="Create"
                                                    asp-route-prestamoId="@item.Id"

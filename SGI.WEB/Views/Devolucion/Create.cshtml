@@ -5,12 +5,19 @@
 }
 <h1>Registrar Devolución</h1>
 <hr />
+
+@if (!string.IsNullOrEmpty(ViewBag.NombreUsuario as string))
+{
+    <div class="alert alert-info">
+        <strong>Usuario:</strong> @ViewBag.NombreUsuario
+    </div>
+}
+
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Create">
             <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-
             <div class="form-group">
                 <label asp-for="PrestamoId" class="control-label"></label>
                 @if (prestamoPrecargado)
