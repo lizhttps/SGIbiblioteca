@@ -1,0 +1,37 @@
+﻿@model List<SGI.WEB.Models.Reporte.PrestamoVencidoViewModel>
+@{
+    ViewData["Title"] = "Préstamos vencidos";
+}
+
+<h2>Préstamos vencidos</h2>
+<a asp-action="Index">← Volver a reportes</a>
+<hr />
+
+@if (!Model.Any())
+{
+    <p>No hay préstamos vencidos actualmente.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Libro</th>
+                <th>Usuario</th>
+                <th>Fecha límite</th>
+                <th>Días vencido</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.TituloLibro</td>
+                    <td>@item.NombreUsuario</td>
+                    <td>@item.FechaLimite.ToString("dd/MM/yyyy")</td>
+                    <td class="text-danger fw-bold">@item.DiasVencido</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

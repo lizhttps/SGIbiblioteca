@@ -1,0 +1,39 @@
+﻿@model List<SGI.WEB.Models.Reporte.LibroMasPrestadoViewModel>
+@{
+    ViewData["Title"] = "Libros más prestados";
+}
+
+<h2>Libros más prestados</h2>
+<a asp-action="Index">← Volver a reportes</a>
+<hr />
+
+@if (!Model.Any())
+{
+    <p>No hay datos suficientes todavía.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Libro</th>
+                <th>Cantidad de préstamos</th>
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int i = 1;
+            }
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@i</td>
+                    <td>@item.TituloLibro</td>
+                    <td>@item.CantidadPrestamos</td>
+                </tr>
+                i++;
+            }
+        </tbody>
+    </table>
+}

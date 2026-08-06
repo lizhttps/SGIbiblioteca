@@ -1,0 +1,39 @@
+﻿@model List<SGI.WEB.Models.Reporte.DevolucionTardiaViewModel>
+@{
+    ViewData["Title"] = "Devoluciones tardías";
+}
+
+<h2>Devoluciones tardías</h2>
+<a asp-action="Index">← Volver a reportes</a>
+<hr />
+
+@if (!Model.Any())
+{
+    <p>No se registran devoluciones tardías.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Libro</th>
+                <th>Usuario</th>
+                <th>Fecha límite</th>
+                <th>Fecha devolución</th>
+                <th>Días de tardanza</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.TituloLibro</td>
+                    <td>@item.NombreUsuario</td>
+                    <td>@item.FechaLimite.ToString("dd/MM/yyyy")</td>
+                    <td>@item.FechaDevolucion.ToString("dd/MM/yyyy")</td>
+                    <td class="text-warning fw-bold">@item.DiasTardanza</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
