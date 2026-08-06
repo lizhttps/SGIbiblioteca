@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.Application.Dtos.Auth;
 using SGI.WEB.Models.Auth;
-using SGI.WEB.Services;
 using System.Security.Claims;
+using SGI.WEB.Services.Auth;
 
 namespace SGI.WEB.Controllers
 {

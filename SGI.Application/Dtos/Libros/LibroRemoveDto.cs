@@ -5,5 +5,7 @@ namespace SGI.Application.Dtos.Libros
     {
         public int Id { get; set; }
         public bool Estado { get; set; }
+        public string? ImagenUrl { get; set; }
+
     }
 }

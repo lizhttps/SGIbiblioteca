@@ -1,108 +1,220 @@
 ﻿@model SGI.WEB.Models.ApiResponse<List<SGI.WEB.Models.Libro.LibroEditModel>>
 
 @{
-    ViewData["Title"] = "Gestión de Libros";
+    ViewData["Title"] = "Catálogo de Libros";
+    bool esBibliotecario = User.IsInRole("Bibliotecario");
+
+    // Agrupamos los libros por Categoría en C#
+    var librosPorCategoria = Model?.Data != null
+        ? Model.Data
+            .GroupBy(l => string.IsNullOrWhiteSpace(l.Categoria) ? "Sin Categoría" : l.Categoria)
+            .OrderBy(g => g.Key)
+        : null;
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
+    <!-- Encabezado -->
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <div>
             <h2 class="fw-bold text-primary mb-1">
-                <i class="bi bi-book-half me-2"></i>Catálogo de Libros
+                <i class="bi bi-book-half me-2"></i>Catálogo por Categorías
             </h2>
-            <p class="text-muted small mb-0">Gestión de inventario y consulta de libros disponibles en la biblioteca</p>
+            <p class="text-muted small mb-0">Explora la colección organizadas por áreas de conocimiento</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4">
-            <i class="bi bi-plus-circle me-2"></i>Nuevo Libro
-        </a>
+
+        @if (esBibliotecario)
+        {
+            <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Libro
+            </a>
+        }
+    </div>
+
+    <!-- 🔍 BARRA DE BÚSQUEDA EN TIEMPO REAL -->
+    <div class="row mb-4">
+        <div class="col-md-8 col-lg-6 mx-auto">
+            <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+                <span class="input-group-text bg-white border-0 ps-3 text-primary">
+                    <i class="bi bi-search"></i>
+                </span>
+                <input type="text" id="inputBuscador" class="form-control border-0 px-2 fs-6"
+                       placeholder="Buscar por título, autor, categoría o ISBN..." onkeyup="filtrarLibros()">
+                <button class="btn btn-white border-0 pe-3 text-muted" type="button" onclick="limpiarBuscador()">
+                    <i class="bi bi-x-circle-fill"></i>
+                </button>
+            </div>
+        </div>
     </div>
 
     @if (TempData["Error"] != null)
     {
-        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm" role="alert">
+        <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <strong>¡Atención!</strong> @TempData["Error"]
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
 
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-secondary text-uppercase small">
-                        <tr>
-                            <th class="ps-4 py-3"># ID</th>
-                            <th class="py-3">Título</th>
-                            <th class="py-3">Autor</th>
-                            <th class="py-3">ISBN</th>
-                            <th class="py-3">Categoría</th>
-                            <th class="py-3 text-center">Stock</th>
-                            <th class="pe-4 py-3 text-end">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (Model?.Success == true && Model.Data != null && Model.Data.Any())
-                        {
-                            @foreach (var item in Model.Data)
-                            {
-                                <tr>
-                                    <td class="ps-4 fw-bold text-secondary">#@item.Id</td>
-                                    <td><span class="fw-semibold text-dark">@item.Titulo</span></td>
-                                    <td class="text-muted"><i class="bi bi-person me-1"></i>@item.Autor</td>
-                                    <td><span class="badge bg-light text-dark border">@item.ISBN</span></td>
-                                    <td><span class="badge bg-info text-dark rounded-pill px-3">@item.Categoria</span></td>
-                                    <td class="text-center">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>¡Éxito!</strong> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- CATÁLOGO DIVIDIDO POR CATEGORÍAS -->
+    @if (Model?.Success == true && librosPorCategoria != null && librosPorCategoria.Any())
+    {
+        @foreach (var grupoCategoria in librosPorCategoria)
+        {
+            <!-- SECCIÓN DE CADA CATEGORÍA -->
+            <div class="seccion-categoria mb-5">
+                <div class="d-flex align-items-center mb-3">
+                    <span class="badge bg-primary text-white fs-6 px-3 py-2 rounded-pill me-2">
+                        <i class="bi bi-bookmark-fill me-1"></i> @grupoCategoria.Key
+                    </span>
+                    <hr class="flex-grow-1 my-0 text-muted" />
+                    <span class="badge bg-light text-secondary border rounded-pill ms-2">
+                        @grupoCategoria.Count() @(grupoCategoria.Count() == 1 ? "ejemplar" : "ejemplares")
+                    </span>
+                </div>
+
+                <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4 g-4">
+                    @foreach (var item in grupoCategoria)
+                    {
+                        <div class="col tarjeta-libro"
+                             data-search="@item.Titulo.ToLower() @item.Autor.ToLower() @item.Categoria.ToLower() @item.ISBN.ToLower()">
+                            <div class="card h-100 border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                                <!-- Portada del Libro -->
+                                <div class="bg-light text-center p-3 position-relative d-flex align-items-center justify-content-center" style="height: 220px;">
+                                    <img src="@(string.IsNullOrEmpty(item.ImagenUrl) ? "https://via.placeholder.com/150x200?text=Sin+Portada" : item.ImagenUrl)"
+                                         class="img-fluid rounded-3 shadow-sm h-100" style="object-fit: contain;" alt="@item.Titulo" />
+                                </div>
+
+                                <div class="card-body d-flex flex-column p-3">
+                                    <h5 class="fw-bold text-dark text-truncate mb-1" title="@item.Titulo">@item.Titulo</h5>
+                                    <p class="text-muted small mb-2"><i class="bi bi-person me-1"></i>@item.Autor</p>
+                                    <p class="text-muted small mb-2"><i class="bi bi-barcode me-1"></i><strong>ISBN:</strong> @item.ISBN</p>
+
+                                    <div class="mt-auto">
+                                        <div class="d-flex justify-content-between align-items-center mb-3">
+                                            <small class="text-muted">Disponibles:</small>
+                                            @if (item.CantidadDisponible > 0)
+                                            {
+                                                <span class="badge bg-success-subtle text-success border border-success px-2 py-1 rounded-pill">
+                                                    @item.CantidadDisponible dispon.
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger border border-danger px-2 py-1 rounded-pill">
+                                                    Agotado
+                                                </span>
+                                            }
+                                        </div>
+
+                                        <!-- Botón Ver Detalles -->
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm w-100 rounded-pill mb-2">
+                                            <i class="bi bi-eye me-1"></i>Ver Detalles
+                                        </a>
+
+                                        <!-- Botón Solicitud de Préstamo -->
                                         @if (item.CantidadDisponible > 0)
                                         {
-                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
-                                                <i class="bi bi-check-circle me-1"></i>@item.CantidadDisponible dispon.
-                                            </span>
+                                            <a asp-controller="Prestamo" asp-action="Solicitar" asp-route-libroId="@item.Id"
+                                               class="btn btn-primary btn-sm w-100 rounded-pill mb-2 shadow-sm">
+                                                <i class="bi bi-send me-1"></i>Solicitar Préstamo
+                                            </a>
                                         }
                                         else
                                         {
-                                            <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
-                                                <i class="bi bi-x-circle me-1"></i>Agotado
-                                            </span>
+                                            <button class="btn btn-secondary btn-sm w-100 rounded-pill mb-2" disabled>
+                                                <i class="bi bi-x-circle me-1"></i>No Disponible
+                                            </button>
                                         }
-                                    </td>
-                                    <td class="pe-4 text-end">
-                                        <div class="btn-group shadow-sm rounded-pill" role="group">
-                                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Ver Detalles">
-                                                <i class="bi bi-eye"></i>
-                                            </a>
-                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="7" class="text-center py-5 text-muted">
-                                    <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
-                                    No se encontraron libros registrados.
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
 
-    @if (Model?.Success == false)
+                                        <!-- Botones solo Bibliotecario -->
+                                        @if (esBibliotecario)
+                                        {
+                                            <div class="btn-group w-100 shadow-sm rounded-pill overflow-hidden mt-1" role="group">
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-light border text-warning" title="Editar">
+                                                    <i class="bi bi-pencil me-1"></i>Editar
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-light border text-danger" title="Eliminar">
+                                                    <i class="bi bi-trash me-1"></i>Eliminar
+                                                </a>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <!-- Mensaje si la búsqueda no encuentra nada -->
+        <div id="sinResultados" class="card border-0 shadow-sm rounded-4 p-5 text-center d-none mt-3">
+            <i class="bi bi-search fs-1 d-block mb-2 text-secondary"></i>
+            <p class="text-muted mb-0">No se encontraron libros que coincidan con la búsqueda.</p>
+        </div>
+    }
+    else
     {
-        <div class="alert alert-danger mt-4 rounded-3" role="alert">
-            <i class="bi bi-exclamation-octagon me-2"></i>@Model.Message
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center">
+            <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
+            <p class="text-muted mb-0">No se encontraron libros registrados en el catálogo.</p>
         </div>
     }
 </div>
+
+<!-- SCRIPT JAVASCRIPT DE BÚSQUEDA EN TIEMPO REAL CON FILTRO DE CATEGORÍAS -->
+<script>
+    function filtrarLibros() {
+        const textoBusqueda = document.getElementById('inputBuscador').value.toLowerCase().trim();
+        const secciones = document.querySelectorAll('.seccion-categoria');
+        let totalEncontrados = 0;
+
+        secciones.forEach(seccion => {
+            const tarjetas = seccion.querySelectorAll('.tarjeta-libro');
+            let visiblesEnSeccion = 0;
+
+            tarjetas.forEach(tarjeta => {
+                const contenido = tarjeta.getAttribute('data-search');
+                if (contenido.includes(textoBusqueda)) {
+                    tarjeta.classList.remove('d-none');
+                    visiblesEnSeccion++;
+                    totalEncontrados++;
+                } else {
+                    tarjeta.classList.add('d-none');
+                }
+            });
+
+            // Si ningún libro de esta categoría coincide, ocultamos toda la sección
+            if (visiblesEnSeccion === 0 && textoBusqueda !== '') {
+                seccion.classList.add('d-none');
+            } else {
+                seccion.classList.remove('d-none');
+            }
+        });
+
+        const msjSinResultados = document.getElementById('sinResultados');
+        if (msjSinResultados) {
+            if (totalEncontrados === 0 && textoBusqueda !== '') {
+                msjSinResultados.classList.remove('d-none');
+            } else {
+                msjSinResultados.classList.add('d-none');
+            }
+        }
+    }
+
+    function limpiarBuscador() {
+        document.getElementById('inputBuscador').value = '';
+        filtrarLibros();
+    }
+</script>

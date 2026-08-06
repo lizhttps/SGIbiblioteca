@@ -1,0 +1,36 @@
+﻿@model SGI.WEB.Models.Libro.LibroEditModel
+
+@{
+    ViewData["Title"] = "Confirmar Solicitud de Préstamo";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-center">
+                <img src="@(string.IsNullOrEmpty(Model.ImagenUrl) ? "https://via.placeholder.com/150x200?text=Sin+Portada" : Model.ImagenUrl)"
+                     class="img-fluid rounded-3 mb-3 mx-auto" style="max-height:220px; object-fit:contain;" alt="@Model.Titulo" />
+
+                <h4 class="fw-bold">@Model.Titulo</h4>
+                <p class="text-muted mb-1"><i class="bi bi-person me-1"></i>@Model.Autor</p>
+                <p class="text-muted mb-3"><i class="bi bi-tag me-1"></i>@Model.Categoria</p>
+
+                <p>
+                    ¿Confirmas que deseas solicitar el préstamo de este libro? Tu solicitud quedará
+                    en estado <strong>Pendiente</strong> hasta que el bibliotecario la apruebe.
+                </p>
+
+                <form asp-controller="Prestamo" asp-action="ConfirmarSolicitud" method="post" class="d-grid gap-2 mt-2">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="libroId" value="@Model.Id" />
+                    <button type="submit" class="btn btn-primary rounded-pill">
+                        <i class="bi bi-send me-1"></i>Confirmar Solicitud
+                    </button>
+                    <a asp-controller="Libro" asp-action="Index" class="btn btn-outline-secondary rounded-pill">
+                        Cancelar
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

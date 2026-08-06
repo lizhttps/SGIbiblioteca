@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models;
 using SGI.WEB.Models.Usuario;
-using SGI.WEB.Services;
+using SGI.WEB.Services.Usuario;
 
 namespace SGI.WEB.Controllers
 {
@@ -72,18 +72,20 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                var ok = await _usuarioApiService.CreateUsuario(usuariocreate);
+                var response = await _usuarioApiService.CreateUsuario(usuariocreate);
 
-                if (ok)
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo crear el usuario.");
                 return View(usuariocreate);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al crear el usuario.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al crear el usuario.");
                 return View(usuariocreate);
             }
         }
@@ -123,19 +125,21 @@ namespace SGI.WEB.Controllers
             try
             {
                 model.FechaMod = DateTime.Now;
-                var ok = await _usuarioApiService.ModifyUsuario(model);
+                var response = await _usuarioApiService.ModifyUsuario(model);
 
-                if (ok)
+                if (response != null && response.Success)
                 {
                     return RedirectToAction(nameof(Index));
                 }
 
                 _loggerService.LogWarning($"No se pudo actualizar el usuario con id {model.Id}.");
+                ModelState.AddModelError(string.Empty, response?.Message ?? "No se pudo actualizar el usuario.");
                 return View(model);
             }
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al editar el usuario.");
+                ModelState.AddModelError(string.Empty, "Ocurrió un error inesperado al editar el usuario.");
                 return View(model);
             }
         }
@@ -170,11 +174,12 @@ namespace SGI.WEB.Controllers
         {
             try
             {
-                var ok = await _usuarioApiService.DisabledUsuario(id);
+                var response = await _usuarioApiService.DisabledUsuario(id);
 
-                if (!ok)
+                if (response == null || !response.Success)
                 {
                     _loggerService.LogWarning($"No se pudo eliminar el usuario con id {id}.");
+                    TempData["Error"] = response?.Message ?? "No se pudo eliminar el usuario.";
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -182,6 +187,7 @@ namespace SGI.WEB.Controllers
             catch (Exception ex)
             {
                 _loggerService.LogError(ex, "Error al eliminar el usuario.");
+                TempData["Error"] = "Ocurrió un error inesperado al eliminar el usuario.";
                 return RedirectToAction(nameof(Index));
             }
         }

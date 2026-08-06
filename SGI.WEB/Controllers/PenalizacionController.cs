@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using SGIbiblioteca.Domain.Interfaces;
 using SGI.WEB.Models.Penalizacion;
-using SGI.WEB.Services;
+using SGI.WEB.Services.Penalizacion;
 
 namespace SGI.WEB.Controllers
 {

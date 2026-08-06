@@ -1,0 +1,68 @@
+﻿@model SGI.WEB.Models.ApiResponse<List<SGI.WEB.Models.Notificacion.NotificacionEditModel>>
+
+@{
+    ViewData["Title"] = "Notificaciones";
+}
+
+<h2>Notificaciones</h2>
+
+@if (User.IsInRole("Bibliotecario"))
+{
+    <a asp-action="Create" class="btn btn-primary mb-3">+ Nueva Notificación</a>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
+@if (Model == null || !Model.Success || Model.Data == null || !Model.Data.Any())
+{
+    <p>No hay notificaciones registradas.</p>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Usuario</th>
+                <th>Mensaje</th>
+                <th>Leído</th>
+                <th>Fecha</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var noti in Model.Data)
+            {
+                <tr>
+                    <td>@noti.UsuarioId</td>
+                    <td>@noti.Mensaje</td>
+                    <td>
+                        @if (noti.Leido)
+                        {
+                            <span class="badge bg-success">Leído</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">Sin leer</span>
+                        }
+                    </td>
+                    <td>@noti.FechaMod.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@noti.Id" class="btn btn-sm btn-outline-secondary">Ver</a>
+                        @if (User.IsInRole("Bibliotecario"))
+                        {
+                            <a asp-action="Edit" asp-route-id="@noti.Id" class="btn btn-sm btn-outline-primary">Editar</a>
+                            <form asp-action="DeleteConfirmed" asp-route-id="@noti.Id" method="post" style="display:inline;"
+                                  onsubmit="return confirm('¿Eliminar esta notificación?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Eliminar</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

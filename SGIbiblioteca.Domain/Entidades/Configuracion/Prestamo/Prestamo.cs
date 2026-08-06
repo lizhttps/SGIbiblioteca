@@ -9,5 +9,6 @@ namespace SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos
         public int UsuarioId { get; set; }
         public DateTime FechaPrestamo { get; set; }
         public DateTime FechaLimite { get; set; }
+        public string EstadoPrestamo { get; set; } = "Pendiente"; 
     }
 }

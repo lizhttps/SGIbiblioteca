@@ -45,12 +45,18 @@
                         <input asp-for="Categoria" class="form-control" placeholder="Ej: Novela" required />
                     </div>
 
-                    <div class="col-md-3">
+                    <!-- 🖼️ NUEVO CAMPO: URL DE LA IMAGEN / PORTADA -->
+                    <div class="col-md-6">
+                        <label asp-for="ImagenUrl" class="form-label fw-semibold">URL de la Portada</label>
+                        <input asp-for="ImagenUrl" class="form-control" placeholder="Ej: https://sitio.com/portada.jpg" />
+                    </div>
+
+                    <div class="col-md-6">
                         <label asp-for="CantidadTotal" class="form-label fw-semibold">Cant. Total</label>
                         <input asp-for="CantidadTotal" type="number" class="form-control" min="1" value="1" required />
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label asp-for="CantidadDisponible" class="form-label fw-semibold">Disponible</label>
                         <input asp-for="CantidadDisponible" type="number" class="form-control" min="0" value="1" required />
                     </div>

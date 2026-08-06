@@ -1,6 +1,4 @@
-﻿
-
-using SGI.Application.Base;
+﻿using SGI.Application.Base;
 
 namespace SGI.Application.Dtos.Prestamo
 {

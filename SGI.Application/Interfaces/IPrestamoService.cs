@@ -8,5 +8,7 @@ namespace SGI.Application.Interfaces
     {
         Task<OperationResult> GetVencidosByUsuarioId(int usuarioId);
         Task<OperationResult> GetPrestamosByUsuarioId(int usuarioId);
+        Task<OperationResult> AprobarPrestamo(PrestamoDecisionDto dto);
+        Task<OperationResult> RechazarPrestamo(PrestamoDecisionDto dto);
     }
 }

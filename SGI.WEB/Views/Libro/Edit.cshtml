@@ -9,7 +9,7 @@
 <div class="container py-4" style="max-width: 700px;">
     <div class="card border-0 shadow-sm rounded-4">
         <div class="card-header bg-warning text-dark py-3 rounded-top-4">
-            <h4 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Libro #@Model?.Id</h4>
+            <h4 class="mb-0 fw-bold"><i class="bi bi-pencil-square me-2"></i>Editar Libro</h4>
         </div>
         <div class="card-body p-4">
             <form asp-action="Edit">
@@ -39,12 +39,18 @@
                         <input asp-for="Categoria" class="form-control" required />
                     </div>
 
-                    <div class="col-md-3">
+                    <!-- 🖼️ NUEVO CAMPO: EDITAR URL DE LA IMAGEN / PORTADA -->
+                    <div class="col-md-6">
+                        <label asp-for="ImagenUrl" class="form-label fw-semibold">URL de la Portada</label>
+                        <input asp-for="ImagenUrl" class="form-control" placeholder="https://sitio.com/portada.jpg" />
+                    </div>
+
+                    <div class="col-md-6">
                         <label asp-for="CantidadTotal" class="form-label fw-semibold">Cant. Total</label>
                         <input asp-for="CantidadTotal" type="number" class="form-control" required />
                     </div>
 
-                    <div class="col-md-3">
+                    <div class="col-md-6">
                         <label asp-for="CantidadDisponible" class="form-label fw-semibold">Disponible</label>
                         <input asp-for="CantidadDisponible" type="number" class="form-control" required />
                     </div>

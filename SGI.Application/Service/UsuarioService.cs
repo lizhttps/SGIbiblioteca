@@ -66,7 +66,7 @@ namespace SGI.Application.Service
             try
             {
                 result.Data = (await _UsuarioRepository.GetAllAsync())
-                    .Where(Usuario => Usuario.Estado) // excluye usuarios desactivados
+                    .Where(Usuario => Usuario.Estado)
                     .Select(Usuario => new UsuarioUpdateDto()
                     {
                         Id = Usuario.Id,
@@ -74,6 +74,7 @@ namespace SGI.Application.Service
                         Apellido = Usuario.Apellido,
                         Correo = Usuario.Correo,
                         Telefono = Usuario.Telefono,
+                        Rol = Usuario.Rol,  
                         FechaMod = Usuario.FechaCreacion,
                         UsuarioMod = int.TryParse(Usuario.CreadoPor, out int user) ? user : 0
                     }).ToList();
@@ -86,6 +87,7 @@ namespace SGI.Application.Service
             }
             return result;
         }
+
 
         public async Task<OperationResult> GetDataById(int id)
         {

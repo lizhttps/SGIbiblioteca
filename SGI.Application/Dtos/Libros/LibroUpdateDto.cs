@@ -14,5 +14,7 @@ namespace SGI.Application.Dtos.Libros
         public int CantidadTotal { get; set; }
         public int CantidadDisponible { get; set; }
         public string Estado { get; set; }
+        public string? ImagenUrl { get; set; }
+
     }
 }

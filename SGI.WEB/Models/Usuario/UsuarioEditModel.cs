@@ -7,6 +7,7 @@
         public string Apellido { get; set; }
         public string Correo { get; set; }
         public string Telefono { get; set; }
+        public string Rol { get; set; }  
         public DateTime FechaMod { get; set; } = DateTime.Now;
         public int UsuarioMod { get; set; }
     }
