@@ -159,7 +159,7 @@ namespace SGI.WEB.Controllers
                             var notificacion = new NotificacionCreateModel
                             {
                                 UsuarioId = prestamo.UsuarioId,
-                                Mensaje = $"✅ Tu devolución del préstamo \"{prestamo.TituloLibro}\" fue registrada correctamente.",
+                                Mensaje = "✅ Tu devolución fue registrada correctamente.",
                                 UsuarioMod = userId,
                                 FechaMod = DateTime.Now
                             };

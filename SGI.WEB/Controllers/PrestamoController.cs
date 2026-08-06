@@ -387,7 +387,7 @@ namespace SGI.WEB.Controllers
                         var notificacion = new NotificacionCreateModel
                         {
                             UsuarioId = prestamo.UsuarioId,
-                            Mensaje = $"¡Tu préstamo del libro \"{prestamo.TituloLibro}\" ha sido aprobado! " +
+                            Mensaje = $"¡Tu préstamo ha sido aprobado! " +
                                       $"Fecha límite de devolución: {fechaDevolucion:dd/MM/yyyy}. " +
                                       $"Tienes {(fechaDevolucion.Date - DateTime.Now.Date).Days} días para devolverlo.",
                             UsuarioMod = userId,
@@ -440,8 +440,8 @@ namespace SGI.WEB.Controllers
                         var notificacion = new NotificacionCreateModel
                         {
                             UsuarioId = prestamo.UsuarioId,
-                            Mensaje = $"Tu solicitud de préstamo del libro \"{prestamo.TituloLibro}\" ha sido rechazada. " +
-                                      $"Puedes contactar al bibliotecario para más información.",
+                            Mensaje = "Tu solicitud de préstamo ha sido rechazada. " +
+                                      "Puedes contactar al bibliotecario para más información.",
                             UsuarioMod = userId,
                             FechaMod = DateTime.Now
                         };
@@ -466,8 +466,6 @@ namespace SGI.WEB.Controllers
             }
         }
 
-
-
         [Authorize(Roles = "Bibliotecario")]
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -491,7 +489,7 @@ namespace SGI.WEB.Controllers
                         var notificacion = new NotificacionCreateModel
                         {
                             UsuarioId = prestamo.UsuarioId,
-                            Mensaje = $"✅ Se registró la devolución del libro \"{prestamo.TituloLibro}\". ¡Gracias!",
+                            Mensaje = "✅ Se registró la devolución del préstamo. ¡Gracias!",
                             UsuarioMod = userId,
                             FechaMod = DateTime.Now
                         };
