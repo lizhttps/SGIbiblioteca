@@ -1,14 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SGI.WEB.Models.Devolucion;
 using SGI.WEB.Models.Notificacion;
-using SGI.WEB.Models.Penalizacion;
 using SGI.WEB.Models.Prestamo;
-using SGI.WEB.Services.Devolucion;
 using SGI.WEB.Services.Libro;
 using SGI.WEB.Services.Notificacion;
-using SGI.WEB.Services.Penalizacion;
-using SGI.WEB.Services.Prestamo;
 using SGI.WEB.Services.Usuario;
 using SGIbiblioteca.Domain.Interfaces;
 using System.Security.Claims;
