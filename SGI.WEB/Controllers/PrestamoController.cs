@@ -1,13 +1,18 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SGI.WEB.Models.Devolucion;
 using SGI.WEB.Models.Notificacion;
+using SGI.WEB.Models.Penalizacion;
 using SGI.WEB.Models.Prestamo;
+using SGI.WEB.Services.Devolucion;
 using SGI.WEB.Services.Libro;
 using SGI.WEB.Services.Notificacion;
+using SGI.WEB.Services.Penalizacion;
 using SGI.WEB.Services.Prestamo;
 using SGI.WEB.Services.Usuario;
 using SGIbiblioteca.Domain.Interfaces;
 using System.Security.Claims;
+
 
 namespace SGI.WEB.Controllers
 {
@@ -17,8 +22,8 @@ namespace SGI.WEB.Controllers
         private readonly IPrestamoApiService _prestamoApiService;
         private readonly ILibroApiService _libroApiService;
         private readonly INotificacionApiService _notificacionApiService;
-        private readonly ILoggerService _loggerService;
         private readonly IUsuarioApiService _usuarioApiService;
+        private readonly ILoggerService _loggerService;
 
         public PrestamoController(
             IPrestamoApiService prestamoApiService,
