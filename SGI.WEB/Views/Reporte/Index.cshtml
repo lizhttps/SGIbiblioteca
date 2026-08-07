@@ -1,35 +1,15 @@
 ﻿@{
     ViewData["Title"] = "Reportes";
 }
-
 <h2>Reportes</h2>
 <hr />
-
 <div class="row">
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Préstamos vencidos</h5>
-                <p class="card-text">Préstamos que superaron su fecha límite sin devolver.</p>
-                <a asp-action="PrestamosVencidos" class="btn btn-primary">Ver reporte</a>
-            </div>
-        </div>
-    </div>
     <div class="col-md-3 mb-3">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Libros más prestados</h5>
                 <p class="card-text">Ranking de libros con más préstamos registrados.</p>
                 <a asp-action="LibrosMasPrestados" class="btn btn-primary">Ver reporte</a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3 mb-3">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Devoluciones tardías</h5>
-                <p class="card-text">Devoluciones realizadas después de la fecha límite.</p>
-                <a asp-action="DevolucionesTardias" class="btn btn-primary">Ver reporte</a>
             </div>
         </div>
     </div>

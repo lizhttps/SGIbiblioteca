@@ -5,8 +5,8 @@
         public int LibroId { get; set; }
         public int UsuarioId { get; set; }
         public DateTime FechaPrestamo { get; set; } = DateTime.Now;
-        public DateTime? FechaLimite { get; set; }              // Nullable, sin valor por defecto
-        public DateTime? FechaDevolucionEsperada { get; set; }  // Nullable, sin valor por defecto
+        public DateTime? FechaLimite { get; set; }             
+        public DateTime? FechaDevolucionEsperada { get; set; }  
         public string Estado { get; set; } = "Pendiente";
 
         public int UsuarioMod { get; set; }
