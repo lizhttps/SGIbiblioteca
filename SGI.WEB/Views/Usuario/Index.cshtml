@@ -6,6 +6,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 
 <div class="container py-4">
+    <!-- Encabezado y Botón Nuevo -->
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h2 class="fw-bold text-primary mb-1">
@@ -18,15 +19,27 @@
         </a>
     </div>
 
+    <!-- Barra de Búsqueda por Nombre y Correo -->
+    <div class="row mb-3">
+        <div class="col-md-6 col-lg-4 ms-auto">
+            <div class="input-group shadow-sm rounded-pill overflow-hidden">
+                <span class="input-group-text bg-white border-0 ps-3">
+                    <i class="bi bi-search text-primary"></i>
+                </span>
+                <input type="text" id="buscarUsuario" class="form-control border-0 ps-2" placeholder="Buscar por nombre o correo..." style="box-shadow: none;">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Usuarios -->
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="tablaUsuarios">
                     <thead class="bg-light text-secondary text-uppercase small">
                         <tr>
-                            <th class="ps-4 py-3"># ID</th>
-                            <th class="py-3">Nombre Completo</th>
-                            <th class="py-3">Correo</th>
+                            <th class="ps-4 py-3">Nombre Completo</th>
+                            <th class="py-3">Correo Electrónico</th>
                             <th class="py-3">Teléfono</th>
                             <th class="py-3">Última Modificación</th>
                             <th class="pe-4 py-3 text-end">Acciones</th>
@@ -38,10 +51,9 @@
                             @foreach (var item in Model.Data)
                             {
                                 <tr>
-                                    <td class="ps-4 fw-bold text-secondary">#@item.Id</td>
-                                    <td>
+                                    <td class="ps-4">
                                         <div class="d-flex align-items-center">
-                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-2"
+                                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center me-3 flex-shrink-0"
                                                  style="width: 36px; height: 36px;">
                                                 <i class="bi bi-person"></i>
                                             </div>
@@ -55,9 +67,7 @@
                                         <i class="bi bi-telephone me-1"></i>@item.Telefono
                                     </td>
                                     <td class="text-muted small">
-                                        @item.FechaMod.ToString("dd/MM/yyyy")
-                                        <br />
-                                        <span class="text-secondary">por usuario @item.UsuarioMod</span>
+                                        <i class="bi bi-calendar-event me-1"></i>@item.FechaMod.ToString("dd/MM/yyyy HH:mm")
                                     </td>
                                     <td class="pe-4 text-end">
                                         <div class="btn-group shadow-sm rounded-pill" role="group">
@@ -77,8 +87,8 @@
                         }
                         else
                         {
-                            <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                            <tr id="sinRegistros">
+                                <td colspan="5" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
                                     No se encontraron usuarios registrados.
                                 </td>
@@ -97,3 +107,17 @@
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('buscarUsuario')?.addEventListener('input', function () {
+            const filtro = this.value.toLowerCase().trim();
+            const filas = document.querySelectorAll('#tablaUsuarios tbody tr:not(#sinRegistros)');
+
+            filas.forEach(fila => {
+                const textoFila = fila.textContent.toLowerCase();
+                fila.style.display = textoFila.includes(filtro) ? '' : 'none';
+            });
+        });
+    </script>
+}

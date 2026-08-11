@@ -1,6 +1,8 @@
 ﻿@model SGI.WEB.Models.ApiResponse<List<SGI.WEB.Models.Prestamo.PrestamoEditModel>>
+
 @{
     ViewData["Title"] = "Préstamos";
+    bool esBibliotecario = User.IsInRole("Bibliotecario");
 }
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
@@ -9,16 +11,30 @@
     <div class="d-flex justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h2 class="fw-bold text-primary mb-1">
-                <i class="bi bi-arrow-left-right me-2"></i>Préstamos
+                <i class="bi bi-arrow-left-right me-2"></i>
+                @(esBibliotecario ? "Gestión de Préstamos" : "Mis Solicitudes y Préstamos")
             </h2>
-            <p class="text-muted small mb-0">Gestión de préstamos activos e historial</p>
+            <p class="text-muted small mb-0">Gestión de solicitudes, préstamos activos e historial</p>
         </div>
-        <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4">
-            <i class="bi bi-plus-circle me-2"></i>Nuevo Préstamo
-        </a>
+
+        @if (esBibliotecario)
+        {
+            <a asp-action="Create" class="btn btn-primary btn-lg shadow-sm rounded-pill px-4">
+                <i class="bi bi-plus-circle me-2"></i>Nuevo Préstamo
+            </a>
+        }
     </div>
 
-    @* Muestra mensajes de error de acciones como Delete *@
+    <!-- ALERTAS -->
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     @if (TempData["Error"] != null)
     {
         <div class="alert alert-danger alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
@@ -34,11 +50,13 @@
                 <table class="table table-hover align-middle mb-0">
                     <thead class="bg-light text-secondary text-uppercase small">
                         <tr>
-                            <th class="ps-4 py-3"># ID</th>
-                            <th class="py-3">Libro</th>
-                            <th class="py-3">Usuario</th>
+                            <th class="ps-4 py-3">Recurso Bibliográfico</th>
+                            @if (esBibliotecario)
+                            {
+                                <th class="py-3">Usuario Solicitante</th>
+                            }
                             <th class="py-3">Fecha Límite</th>
-                            <th class="py-3">Última Modificación</th>
+                            <th class="py-3 text-center">Estado</th>
                             <th class="pe-4 py-3 text-end">Acciones</th>
                         </tr>
                     </thead>
@@ -48,28 +66,169 @@
                             @foreach (var item in Model.Data)
                             {
                                 <tr>
-                                    <td class="ps-4 fw-bold text-secondary">#@item.Id</td>
-                                    <td><i class="bi bi-book me-1"></i>#@item.LibroId</td>
-                                    <td><i class="bi bi-person me-1"></i>#@item.UsuarioId</td>
+                                    <!-- Recurso -->
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="bg-primary-subtle text-primary rounded-circle p-2 me-2">
+                                                <i class="bi bi-book fs-5"></i>
+                                            </div>
+                                            <span class="fw-semibold text-dark">@item.TituloLibro</span>
+                                        </div>
+                                    </td>
+
+                                    <!-- Usuario (solo bibliotecario) -->
+                                    @if (esBibliotecario)
+                                    {
+                                        <td class="text-muted">
+                                            <i class="bi bi-person me-1"></i>@item.NombreUsuario
+                                        </td>
+                                    }
+
+                                    <!-- Fecha Límite y Días Restantes -->
                                     <td class="text-muted">
-                                        <i class="bi bi-calendar-event me-1"></i>@item.FechaLimite.ToString("dd/MM/yyyy")
+                                        <div>
+                                            <i class="bi bi-calendar-event me-1"></i>@item.FechaLimite.ToString("dd/MM/yyyy")
+                                        </div>
+
+                                        <!-- CÁLCULO DE DÍAS RESTANTES (si está Activo o Aprobado) -->
+                                        @if (item.EstadoPrestamo == "Activo" || item.EstadoPrestamo == "Aprobado")
+                                        {
+                                            var diasRestantes = (item.FechaLimite.Date - DateTime.Now.Date).Days;
+                                            <div class="mt-1">
+                                                @if (diasRestantes > 3)
+                                                {
+                                                    <span class="badge bg-success-subtle text-success border border-success small rounded-pill">
+                                                        <i class="bi bi-clock me-1"></i>Quedan @diasRestantes días
+                                                    </span>
+                                                }
+                                                else if (diasRestantes > 0)
+                                                {
+                                                    <span class="badge bg-warning-subtle text-warning border border-warning small rounded-pill">
+                                                        <i class="bi bi-exclamation-triangle me-1"></i>¡Quedan @diasRestantes días!
+                                                    </span>
+                                                }
+                                                else if (diasRestantes == 0)
+                                                {
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger small rounded-pill">
+                                                        <i class="bi bi-alarm me-1"></i>¡Vence HOY!
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger text-white small rounded-pill">
+                                                        <i class="bi bi-x-octagon me-1"></i>Vencido (@(Math.Abs(diasRestantes)) d)
+                                                    </span>
+                                                }
+                                            </div>
+                                        }
                                     </td>
-                                    <td class="text-muted small">
-                                        @item.FechaMod.ToString("dd/MM/yyyy")
-                                        <br />
-                                        <span class="text-secondary">por usuario @item.UsuarioMod</span>
+
+                                    <!-- Estado -->
+                                    <td class="text-center">
+                                        @if (item.EstadoPrestamo == "Pendiente")
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning border border-warning px-3 py-2 rounded-pill">
+                                                <i class="bi bi-clock-history me-1"></i>Pendiente
+                                            </span>
+                                        }
+                                        else if (item.EstadoPrestamo == "Activo" || item.EstadoPrestamo == "Aprobado")
+                                        {
+                                            <span class="badge bg-success-subtle text-success border border-success px-3 py-2 rounded-pill">
+                                                <i class="bi bi-check-circle me-1"></i>Activo
+                                            </span>
+                                        }
+                                        else if (item.EstadoPrestamo == "Rechazado")
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger border border-danger px-3 py-2 rounded-pill">
+                                                <i class="bi bi-x-circle me-1"></i>Rechazado
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary border px-3 py-2 rounded-pill">
+                                                @(string.IsNullOrEmpty(item.EstadoPrestamo) ? "Registrado" : item.EstadoPrestamo)
+                                            </span>
+                                        }
                                     </td>
+
+                                    <!-- Acciones -->
                                     <td class="pe-4 text-end">
+                                        @* Formulario de Aprobar/Rechazar para Bibliotecario en Pendientes *@
+                                        @if (esBibliotecario && item.EstadoPrestamo == "Pendiente")
+                                        {
+                                            <div class="d-inline-flex align-items-center gap-2 me-2">
+                                                <!-- FORMULARIO APROBAR CON FECHA -->
+                                                <form asp-action="Aprobar" method="post" class="d-inline-flex align-items-center gap-1">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@item.Id" />
+
+                                                    <!-- Selector de fecha para el bibliotecario -->
+                                                    <input type="date"
+                                                           name="fechaDevolucion"
+                                                           class="form-control form-control-sm rounded-3"
+                                                           style="width: 135px;"
+                                                           value="@DateTime.Now.AddDays(7).ToString("yyyy-MM-dd")"
+                                                           min="@DateTime.Now.AddDays(1).ToString("yyyy-MM-dd")"
+                                                           title="Fecha límite de devolución"
+                                                           required />
+
+                                                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-3" title="Aprobar Préstamo">
+                                                        <i class="bi bi-check-lg me-1"></i>Aprobar
+                                                    </button>
+                                                </form>
+
+                                                <!-- BOTÓN RECHAZAR -->
+                                                <form asp-action="Rechazar" asp-route-id="@item.Id" method="post" class="d-inline">
+                                                    @Html.AntiForgeryToken()
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill" title="Rechazar Préstamo">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        }
+
+                                        @* Botones Devuelto/Penalizar para préstamos activos *@
+                                        @if (esBibliotecario && (item.EstadoPrestamo == "Activo" || item.EstadoPrestamo == "Aprobado"))
+                                        {
+                                            <div class="d-inline-flex align-items-center gap-2 me-2">
+                                                <!-- DEVUELTO: redirige a Devolucion/Create -->
+                                                <a asp-controller="Devolucion"
+                                                   asp-action="Create"
+                                                   asp-route-prestamoId="@item.Id"
+                                                   asp-route-returnUrl="@Url.Action("Index", "Prestamo")"
+                                                   class="btn btn-sm btn-success rounded-pill px-3"
+                                                   title="Registrar devolución">
+                                                    <i class="bi bi-box-arrow-in-down me-1"></i>Devuelto
+                                                </a>
+
+                                                <!-- PENALIZAR: redirige a Penalizacion/Create -->
+                                                <a asp-controller="Penalizacion"
+                                                   asp-action="Create"
+                                                   asp-route-prestamoId="@item.Id"
+                                                   asp-route-usuarioId="@item.UsuarioId"
+                                                   asp-route-returnUrl="@Url.Action("Index", "Prestamo")"
+                                                   class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                                   title="Aplicar penalización">
+                                                    <i class="bi bi-exclamation-octagon me-1"></i>Penalizar
+                                                </a>
+                                            </div>
+                                        }
+
+                                        @* Botones estándar (Ver Detalles, Editar, Eliminar) *@
                                         <div class="btn-group shadow-sm rounded-pill" role="group">
                                             <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Ver Detalles">
                                                 <i class="bi bi-eye"></i>
                                             </a>
-                                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Editar">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
+
+                                            @if (esBibliotecario)
+                                            {
+                                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Editar">
+                                                    <i class="bi bi-pencil"></i>
+                                                </a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="bi bi-trash"></i>
+                                                </a>
+                                            }
                                         </div>
                                     </td>
                                 </tr>
@@ -78,7 +237,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="6" class="text-center py-5 text-muted">
+                                <td colspan="@(esBibliotecario ? 5 : 4)" class="text-center py-5 text-muted">
                                     <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary"></i>
                                     No se encontraron préstamos registrados.
                                 </td>

@@ -64,8 +64,6 @@ namespace SGI.WEB.Services.Prestamo
             return await ReadApiResponse(result, "Error al eliminar el préstamo.");
         }
 
-        // Helper: siempre intenta leer el cuerpo (aunque el status no sea 2xx),
-        // porque la API devuelve OperationResult con el Message incluso en 400/409/500.
         private static async Task<ApiResponse<object>> ReadApiResponse(HttpResponseMessage result, string fallbackMessage)
         {
             var responseString = await result.Content.ReadAsStringAsync();
@@ -115,6 +113,33 @@ namespace SGI.WEB.Services.Prestamo
             }
             var responseString = await result.Content.ReadAsStringAsync();
             return JsonSerializer.Deserialize<ApiResponse<List<PrestamoEditModel>>>(responseString, _jsonOptions);
+        }
+
+        public async Task<ApiResponse<object>> AprobarPrestamo(int id, int usuarioMod, DateTime fechaDevolucion)
+        {
+            var decisionDto = new PrestamoDecisionDto
+            {
+                Id = id,
+                UsuarioMod = usuarioMod,
+                FechaDevolucion = fechaDevolucion  
+            };
+            var result = await _httpClient.PostAsJsonAsync("Prestamo/AprobarPrestamo", decisionDto);
+            return await ReadApiResponse(result, "Error al aprobar el préstamo.");
+        }
+
+
+        public async Task<ApiResponse<object>> RechazarPrestamo(int id, int usuarioMod)
+        {
+            var decisionDto = new PrestamoDecisionDto { Id = id, UsuarioMod = usuarioMod };
+            var result = await _httpClient.PostAsJsonAsync("Prestamo/RechazarPrestamo", decisionDto);
+            return await ReadApiResponse(result, "Error al rechazar el préstamo.");
+        }
+
+        public async Task<ApiResponse<object>> MarcarDevuelto(int id, int usuarioMod)
+        {
+            var decisionDto = new PrestamoDecisionDto { Id = id, UsuarioMod = usuarioMod };
+            var result = await _httpClient.PostAsJsonAsync("Prestamo/MarcarDevuelto", decisionDto);
+            return await ReadApiResponse(result, "Error al marcar el préstamo como devuelto.");
         }
     }
 }

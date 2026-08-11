@@ -19,11 +19,15 @@ namespace SGI.WEB.Controllers
             _loggerService = loggerService;
         }
 
-        // Lista todas (uso administrativo / bibliotecario)
         public async Task<IActionResult> Index()
         {
             try
             {
+                if (!User.IsInRole("Bibliotecario"))
+                {
+                    return RedirectToAction(nameof(MisNotificaciones));
+                }
+
                 var response = await _notificacionApiService.GetNotificaciones();
                 return View(response);
             }
@@ -33,6 +37,7 @@ namespace SGI.WEB.Controllers
                 return View("Error");
             }
         }
+
 
         // Notificaciones del usuario logueado
         public async Task<IActionResult> MisNotificaciones()

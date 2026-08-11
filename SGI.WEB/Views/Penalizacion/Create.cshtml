@@ -1,6 +1,7 @@
 ﻿@model SGI.WEB.Models.Penalizacion.PenalizacionCreateModel
 @{
     ViewData["Title"] = "Crear Penalización";
+    bool usuarioPrecargado = Model != null && Model.UsuarioId > 0;
 }
 
 <div class="container py-4">
@@ -9,33 +10,60 @@
             <div class="card border-0 shadow-sm rounded-4">
                 <div class="card-header bg-white border-0 pt-4 px-4">
                     <h3 class="fw-bold text-primary mb-1">
-                        <i class="bi bi-plus-circle me-2"></i>Nueva Penalización
+                        <i class="bi bi-exclamation-octagon me-2"></i>Nueva Penalización
                     </h3>
-                    <p class="text-muted small mb-0">Ingrese los datos para registrar la sanción</p>
+                    <p class="text-muted small mb-0">Ingrese los datos para registrar la sanción al usuario</p>
                 </div>
                 <div class="card-body p-4">
                     <form asp-action="Create" method="post">
-                        <input type="hidden" asp-for="UsuarioMod" value="1" />
-                        <input type="hidden" asp-for="FechaMod" value="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss")" />
+                        @Html.AntiForgeryToken()
 
+                        <!-- Campos ocultos para mantener contexto -->
+                        <input type="hidden" name="returnUrl" value="@ViewBag.ReturnUrl" />
+                        <input type="hidden" name="prestamoId" value="@ViewBag.PrestamoId" />
+
+                        <!-- Selección o Visualización del Usuario -->
                         <div class="mb-3">
-                            <label asp-for="UsuarioId" class="form-label fw-semibold">ID Usuario</label>
-                            <input asp-for="UsuarioId" class="form-control rounded-3" type="number" required />
+                            <label class="form-label fw-semibold">Usuario</label>
+                            @if (usuarioPrecargado)
+                            {
+                                <input type="text" class="form-control rounded-3 bg-light"
+                                       value="@(ViewBag.NombreUsuario ?? $"Usuario ID #{Model.UsuarioId}")" readonly />
+                                <input asp-for="UsuarioId" type="hidden" />
+                            }
+                            else
+                            {
+                                <input asp-for="UsuarioId" class="form-control rounded-3" type="number" placeholder="Ingrese el ID del usuario" required />
+                            }
+                            <span asp-validation-for="UsuarioId" class="text-danger small"></span>
                         </div>
 
+                        <!-- Motivo -->
                         <div class="mb-3">
                             <label asp-for="Motivo" class="form-label fw-semibold">Motivo de la Penalización</label>
-                            <textarea asp-for="Motivo" class="form-control rounded-3" rows="3" required></textarea>
+                            <textarea asp-for="Motivo" class="form-control rounded-3" rows="3" placeholder="Escriba la razón de la penalización..." required></textarea>
+                            <span asp-validation-for="Motivo" class="text-danger small"></span>
                         </div>
 
+                        <!-- Monto -->
                         <div class="mb-3">
                             <label asp-for="Monto" class="form-label fw-semibold">Monto ($)</label>
-                            <input asp-for="Monto" class="form-control rounded-3" type="number" step="0.01" required />
+                            <div class="input-group">
+                                <span class="input-group-text rounded-start-3">$</span>
+                                <input asp-for="Monto" class="form-control rounded-end-3" type="number" step="0.01" min="0" placeholder="0.00" required />
+                            </div>
+                            <span asp-validation-for="Monto" class="text-danger small"></span>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2 mt-4 pt-2 border-top">
-                            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">Cancelar</a>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4">Guardar</button>
+                        <!-- Botones de Acción -->
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <a href="@(string.IsNullOrEmpty(ViewBag.ReturnUrl as string) ? Url.Action("Index") : ViewBag.ReturnUrl)"
+                               class="btn btn-outline-secondary rounded-pill px-4">
+                                Cancelar
+                            </a>
+                            <button type="submit" class="btn btn-danger rounded-pill px-4">
+                                <i class="bi bi-check-circle me-1"></i> Guardar Penalización
+                            </button>
                         </div>
                     </form>
                 </div>

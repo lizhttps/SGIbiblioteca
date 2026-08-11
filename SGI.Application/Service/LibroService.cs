@@ -36,6 +36,7 @@ namespace SGI.Application.Service
                     CantidadTotal = libroid.CantidadTotal,
                     CantidadDisponible = libroid.CantidadDisponible,
                     Estado = libroid.Estado,
+                    ImagenUrl = string.IsNullOrEmpty(libroid.ImagenUrl) ? "https://via.placeholder.com/150" : libroid.ImagenUrl, 
                     FechaMod = libroid.FechaCreacion,
                     UsuarioMod = int.TryParse(libroid.CreadoPor, out int user) ? user : 0
                 };
@@ -45,7 +46,7 @@ namespace SGI.Application.Service
             catch (Exception ex)
             {
                 result.Success = false;
-                result.Message = "Error obteniendo";
+                result.Message = "Error obteniendo el libro por ISBN.";
                 _logger.LogError(ex, result.Message);
             }
 
@@ -72,6 +73,7 @@ namespace SGI.Application.Service
                         CantidadTotal = libro.CantidadTotal,
                         CantidadDisponible = libro.CantidadDisponible,
                         Estado = libro.Estado,
+                        ImagenUrl = string.IsNullOrEmpty(libro.ImagenUrl) ? "https://via.placeholder.com/150" : libro.ImagenUrl,
                         FechaMod = libro.FechaCreacion,
                         UsuarioMod = int.TryParse(libro.CreadoPor, out int user) ? user : 0
                     }).ToList();
@@ -110,6 +112,7 @@ namespace SGI.Application.Service
                     CantidadTotal = libroid.CantidadTotal,
                     CantidadDisponible = libroid.CantidadDisponible,
                     Estado = libroid.Estado,
+                    ImagenUrl = string.IsNullOrEmpty(libroid.ImagenUrl) ? "https://via.placeholder.com/150" : libroid.ImagenUrl, 
                     FechaMod = libroid.FechaCreacion,
                     UsuarioMod = int.TryParse(libroid.CreadoPor, out int user) ? user : 0
                 };
@@ -119,7 +122,7 @@ namespace SGI.Application.Service
             catch (Exception ex)
             {
                 result.Success = false;
-                result.Message = "Error obteniendo";
+                result.Message = "Error obteniendo el libro por ID.";
                 _logger.LogError(ex, result.Message);
             }
 
@@ -141,7 +144,6 @@ namespace SGI.Application.Service
                     return result;
                 }
 
-                // Si dto.Estado es bool, lo convertimos a texto ("true"/"false")
                 libroToDelete.Estado = dto.Estado ? "true" : "false";
 
                 await _libroRepository.UpdateEntityAsync(libroToDelete);
@@ -155,7 +157,6 @@ namespace SGI.Application.Service
 
             return result;
         }
-
 
         public async Task<OperationResult> Save(LibroSaveDto dto)
         {
@@ -171,6 +172,7 @@ namespace SGI.Application.Service
                     CantidadTotal = dto.CantidadTotal,
                     CantidadDisponible = dto.CantidadDisponible,
                     Estado = string.IsNullOrEmpty(dto.Estado) ? "true" : dto.Estado,
+                    ImagenUrl = string.IsNullOrEmpty(dto.ImagenUrl) ? "https://via.placeholder.com/150" : dto.ImagenUrl, 
                     FechaCreacion = dto.FechaMod,
                     CreadoPor = dto.UsuarioMod.ToString()
                 });
@@ -206,6 +208,7 @@ namespace SGI.Application.Service
                 libroToUpdate.Estado = dto.Estado;
                 libroToUpdate.CantidadTotal = dto.CantidadTotal;
                 libroToUpdate.CantidadDisponible = dto.CantidadDisponible;
+                libroToUpdate.ImagenUrl = string.IsNullOrEmpty(dto.ImagenUrl) ? libroToUpdate.ImagenUrl : dto.ImagenUrl;
                 libroToUpdate.FechaModificacion = dto.FechaMod;
                 libroToUpdate.ModificadoPor = dto.UsuarioMod.ToString();
 

@@ -6,7 +6,6 @@ using SGIbiblioteca.Domain.Entidades.Configuracion.Prestamos;
 using SGIbiblioteca.Domain.Repositorio;
 using SGIbiblioteca.Domain.Interfaces;
 
-
 namespace SGI.Application.Service
 {
     public class PrestamoService : IPrestamoService
@@ -36,17 +35,27 @@ namespace SGI.Application.Service
             OperationResult result = new OperationResult();
             try
             {
-                result.Data = (await _prestamoRepository.GetAllAsync())
+                var prestamos = (await _prestamoRepository.GetAllAsync())
                     .Where(p => p.Estado)
-                    .Select(p => new PrestamoUpdateDto()
-                    {
-                        Id = p.Id,
-                        UsuarioId = p.UsuarioId,
-                        LibroId = p.LibroId,
-                        FechaLimite = p.FechaLimite,
-                        FechaMod = p.FechaCreacion,
-                        UsuarioMod = int.TryParse(p.CreadoPor, out int user) ? user : 0
-                    }).ToList();
+                    .ToList();
+
+                var libros = (await _libroRepository.GetAllAsync())
+                    .ToDictionary(l => l.Id, l => l.Titulo);
+
+                var usuarios = (await _usuarioRepository.GetAllAsync())
+                    .ToDictionary(u => u.Id, u => $"{u.Nombre} {u.Apellido}");
+
+                result.Data = prestamos.Select(p => new PrestamoDto
+                {
+                    Id = p.Id,
+                    LibroId = p.LibroId,
+                    UsuarioId = p.UsuarioId,
+                    FechaPrestamo = p.FechaPrestamo,
+                    FechaLimite = p.FechaLimite,
+                    EstadoPrestamo = p.EstadoPrestamo,
+                    TituloLibro = libros.TryGetValue(p.LibroId, out var titulo) ? titulo : "Libro no disponible",
+                    NombreUsuario = usuarios.TryGetValue(p.UsuarioId, out var nombre) ? nombre : "Usuario no disponible"
+                }).ToList();
             }
             catch (Exception ex)
             {
@@ -91,12 +100,8 @@ namespace SGI.Application.Service
         public async Task<OperationResult> Save(PrestamoSaveDto dto)
         {
             OperationResult result = new OperationResult();
-            Libro? libro = null;
-            bool libroDescontado = false;
-
             try
             {
-                // validaciones
                 var usuario = await _usuarioRepository.GetEntityByIdAsync(dto.UsuarioId);
                 if (usuario == null || usuario.Estado == false)
                 {
@@ -105,15 +110,16 @@ namespace SGI.Application.Service
                     return result;
                 }
 
+                // CORRECCIÓN: Verifica solo penalizaciones ACTIVAS (Estado == true) y NO PAGADAS (!Pagada)
                 var penalizaciones = await _penalizacionRepository.GetByUsuarioIdAsync(dto.UsuarioId);
-                if (penalizaciones != null && penalizaciones.Any(p => p.Pagada == false)) // Verifica si hay penalizaciones pendientes de pago
+                if (penalizaciones != null && penalizaciones.Any(p => p.Estado && !p.Pagada))
                 {
                     result.Success = false;
                     result.Message = "El usuario tiene penalizaciones pendientes de pago";
                     return result;
                 }
 
-                libro = await _libroRepository.GetEntityByIdAsync(dto.LibroId);
+                var libro = await _libroRepository.GetEntityByIdAsync(dto.LibroId);
                 if (libro == null)
                 {
                     result.Success = false;
@@ -124,49 +130,32 @@ namespace SGI.Application.Service
                 if (libro.CantidadDisponible <= 0)
                 {
                     result.Success = false;
-                    result.Message = "no hay copias disponibles de este libro";
+                    result.Message = "No hay copias disponibles de este libro";
                     return result;
                 }
 
-                // Descontamos la disponibilidad del libro
-                libro.CantidadDisponible = libro.CantidadDisponible - 1;
-                await _libroRepository.UpdateEntityAsync(libro);
-                libroDescontado = true;
-
+                // NO se descuenta stock aquí. Solo se registra la solicitud como Pendiente.
+                // El descuento ocurre en AprobarPrestamo().
                 result = await _prestamoRepository.SaveEntityAsync(new Prestamo()
                 {
                     LibroId = dto.LibroId,
                     UsuarioId = dto.UsuarioId,
+                    FechaPrestamo = DateTime.Now,
                     FechaLimite = dto.FechaLimite,
                     FechaCreacion = dto.FechaMod,
                     CreadoPor = dto.UsuarioMod.ToString(),
-                    Estado = true
+                    Estado = true,
+                    EstadoPrestamo = "Pendiente"
                 });
-
-                // Si el préstamo no se pudo registrar, revertimos el descuento del libro
-                // para no dejar una copia "fantasma" descontada sin préstamo asociado
-                if (!result.Success && libroDescontado)
-                {
-                    libro.CantidadDisponible += 1;
-                    await _libroRepository.UpdateEntityAsync(libro);
-                }
             }
             catch (Exception ex)
             {
-                // Si la excepción ocurrió después de descontar el libro, también revertimos aquí
-                if (libroDescontado && libro != null)
-                {
-                    libro.CantidadDisponible += 1;
-                    await _libroRepository.UpdateEntityAsync(libro);
-                }
-
                 result.Success = false;
                 result.Message = "Error al registrar el prestamo.";
                 _logger.LogError(ex, result.Message);
             }
             return result;
         }
-
 
         public async Task<OperationResult> Update(PrestamoUpdateDto dto)
         {
@@ -280,6 +269,154 @@ namespace SGI.Application.Service
             {
                 result.Success = false;
                 result.Message = "Error al obtener los prestamos del usuario";
+                _logger.LogError(ex, result.Message);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult> AprobarPrestamo(PrestamoDecisionDto dto)
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var prestamo = await _prestamoRepository.GetEntityByIdAsync(dto.Id);
+                if (prestamo == null)
+                {
+                    result.Success = false;
+                    result.Message = "Préstamo no encontrado.";
+                    return result;
+                }
+
+                if (prestamo.EstadoPrestamo != "Pendiente")
+                {
+                    result.Success = false;
+                    result.Message = "Solo se pueden aprobar solicitudes en estado Pendiente.";
+                    return result;
+                }
+
+                var libro = await _libroRepository.GetEntityByIdAsync(prestamo.LibroId);
+                if (libro == null || libro.CantidadDisponible <= 0)
+                {
+                    result.Success = false;
+                    result.Message = "No hay copias disponibles de este libro.";
+                    return result;
+                }
+
+                // Descontamos el stock solo al aprobar
+                libro.CantidadDisponible -= 1;
+                await _libroRepository.UpdateEntityAsync(libro);
+
+                prestamo.EstadoPrestamo = "Aprobado";
+                prestamo.FechaModificacion = DateTime.Now;
+                prestamo.ModificadoPor = dto.UsuarioMod.ToString();
+                if (dto.FechaDevolucion.HasValue)
+                {
+                    prestamo.FechaLimite = dto.FechaDevolucion.Value;
+                }
+
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    // revertimos el descuento si falla el update
+                    libro.CantidadDisponible += 1;
+                    await _libroRepository.UpdateEntityAsync(libro);
+
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al aprobar el préstamo.";
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error al aprobar el préstamo.";
+                _logger.LogError(ex, result.Message);
+            }
+            return result;
+        }
+
+        public async Task<OperationResult> RechazarPrestamo(PrestamoDecisionDto dto)
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var prestamo = await _prestamoRepository.GetEntityByIdAsync(dto.Id);
+                if (prestamo == null)
+                {
+                    result.Success = false;
+                    result.Message = "Préstamo no encontrado.";
+                    return result;
+                }
+
+                if (prestamo.EstadoPrestamo != "Pendiente")
+                {
+                    result.Success = false;
+                    result.Message = "Solo se pueden rechazar solicitudes en estado Pendiente.";
+                    return result;
+                }
+
+                prestamo.EstadoPrestamo = "Rechazado";
+                prestamo.FechaModificacion = DateTime.Now;
+                prestamo.ModificadoPor = dto.UsuarioMod.ToString();
+
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al rechazar el préstamo.";
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error al rechazar el préstamo.";
+                _logger.LogError(ex, result.Message);
+            }
+            return result;
+        }
+        public async Task<OperationResult> MarcarDevuelto(PrestamoDecisionDto dto)
+        {
+            OperationResult result = new OperationResult();
+            try
+            {
+                var prestamo = await _prestamoRepository.GetEntityByIdAsync(dto.Id);
+                if (prestamo == null)
+                {
+                    result.Success = false;
+                    result.Message = "Préstamo no encontrado.";
+                    return result;
+                }
+
+                if (prestamo.EstadoPrestamo != "Aprobado" && prestamo.EstadoPrestamo != "Activo")
+                {
+                    result.Success = false;
+                    result.Message = "Solo se pueden marcar como devueltos préstamos Activos o Aprobados.";
+                    return result;
+                }
+
+                prestamo.EstadoPrestamo = "Devuelto";
+                prestamo.FechaModificacion = DateTime.Now;
+                prestamo.ModificadoPor = dto.UsuarioMod.ToString();
+
+                var updateResult = await _prestamoRepository.UpdateEntityAsync(prestamo);
+                if (!updateResult.Success)
+                {
+                    result.Success = false;
+                    result.Message = updateResult.Message ?? "Error al marcar el préstamo como devuelto.";
+                    return result;
+                }
+
+                // Devolvemos la copia al inventario disponible
+                var libro = await _libroRepository.GetEntityByIdAsync(prestamo.LibroId);
+                if (libro != null)
+                {
+                    libro.CantidadDisponible += 1;
+                    await _libroRepository.UpdateEntityAsync(libro);
+                }
+            }
+            catch (Exception ex)
+            {
+                result.Success = false;
+                result.Message = "Error al marcar el préstamo como devuelto.";
                 _logger.LogError(ex, result.Message);
             }
             return result;
